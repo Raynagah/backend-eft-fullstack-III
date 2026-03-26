@@ -1,0 +1,33 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: ms-gestion-mascotas
+
+  # ===============================
+  # CONEXIÓN A LA BASE DE DATOS NEON
+  # ===============================
+  datasource:
+    url: jdbc:postgresql://ep-dawn-night-an2au2vx-pooler.c-6.us-east-1.aws.neon.tech/sanos_y_salvos_db?sslmode=require&channelBinding=require
+    username: neondb_owner
+    password: npg_nGytqPe5RDo6
+
+  # ===============================
+  # CONFIGURACIÓN DE JPA / HIBERNATE
+  # ===============================
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    show-sql: true
+
+# ===============================
+# CONFIGURACIÓN DE EUREKA CLIENT
+# ===============================
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/

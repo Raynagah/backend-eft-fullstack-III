@@ -1,0 +1,23 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+
+  cloud:
+    gateway:
+      server:
+        webmvc:
+          routes:
+            - id: ruta-mascotas
+              uri: lb://ms-gestion-mascotas
+              predicates:
+                - Path=/api/mascotas/**
+              # OJO: Quité el 'StripPrefix=1' de tu profe porque tu controlador
+              # en el microservicio ya espera la ruta completa "/api/mascotas"
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/

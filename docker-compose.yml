@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  # 1. EL RADAR (EUREKA)
+  eureka-server:
+    build: ./eureka-server # Nombre de la carpeta de tu proyecto Eureka
+    container_name: eureka-server
+    ports:
+      - "8761:8761"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+
+  # 2. TU MICROSERVICIO DE MASCOTAS
+  ms-gestion-mascotas:
+    build: ./gestion-mascotas # Nombre de tu carpeta del microservicio
+    container_name: ms-gestion-mascotas
+    ports:
+      - "8081:8081"
+    environment:
+      # ¡Aquí reemplazamos el localhost por el nombre del contenedor de Eureka!
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+    depends_on:
+      - eureka-server
+
+  # 3. EL RECEPCIONISTA (API GATEWAY)
+  api-gateway:
+    build: ./api-gateway # Nombre de tu carpeta del Gateway
+    container_name: api-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+    depends_on:
+      - eureka-server
