@@ -30,6 +30,7 @@ public class MascotaController {
                 dto.tamano(),
                 dto.nombreContacto(),
                 dto.telefonoContacto(),
+                dto.emailContacto(),
                 dto.fotografiaUrl(),
                 dto.latitud(),
                 dto.longitud()

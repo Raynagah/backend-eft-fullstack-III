@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 public class ReporteFactory {
 
     // Este es nuestro Factory Method
-    public ReporteMascota crearReporte(String tipoReporte, String especie, String raza, String color, String tamano, String nombre, String telefono, String fotoUrl, Double lat, Double lng) {
+    public ReporteMascota crearReporte(String tipoReporte, String especie, String raza, String color, String tamano, String nombre, String telefono, String email, String fotoUrl, Double lat, Double lng) {
 
         // Usamos el patrón Builder que nos regaló Lombok en la entidad
         ReporteMascota.ReporteMascotaBuilder builder = ReporteMascota.builder()
@@ -18,6 +18,7 @@ public class ReporteFactory {
                 .tamano(tamano)
                 .nombreContacto(nombre)
                 .telefonoContacto(telefono)
+                .emailContacto(email)
                 .fotografiaUrl(fotoUrl)
                 .latitud(lat)
                 .longitud(lng);

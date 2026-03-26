@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 @Entity // Indica que esta clase es una entidad JPA que se mapeará a una tabla
 @Table(name = "reportes_mascotas") // Nombre de la tabla en tu base de datos
@@ -52,6 +53,7 @@ public class ReporteMascota {
     private String telefonoContacto;
 
     @Column(name = "email_contacto")
+    @JsonProperty("emailContacto") // Esto le dice a Jackson: "Búscalo así en el JSON"
     private String emailContacto;
 
     // --- METADATOS ---

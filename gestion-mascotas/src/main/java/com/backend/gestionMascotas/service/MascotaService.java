@@ -16,11 +16,11 @@ public class MascotaService {
     private final ReporteFactory reporteFactory;
 
     // Metodo para crear y guardar un reporte
-    public ReporteMascota registrarReporte(String tipo, String especie, String raza, String color, String tamano, String nombre, String telefono, String fotoUrl, Double lat, Double lng) {
+    public ReporteMascota registrarReporte(String tipo, String especie, String raza, String color, String tamano, String nombre, String telefono, String email, String fotoUrl, Double lat, Double lng) {
 
         // 1. Usamos el Factory Method para crear la entidad
         ReporteMascota nuevoReporte = reporteFactory.crearReporte(
-                tipo, especie, raza, color, tamano, nombre, telefono, fotoUrl, lat, lng
+                tipo, especie, raza, color, tamano, nombre, telefono, email, fotoUrl, lat, lng
         );
 
         // 2. Usamos el Repository Pattern para guardarla en la base de datos

@@ -10,6 +10,7 @@ public record ReporteRequestDTO(
         String tamano,
         String nombreContacto,
         String telefonoContacto,
+        String emailContacto,
         String fotografiaUrl,
         Double latitud,
         Double longitud
