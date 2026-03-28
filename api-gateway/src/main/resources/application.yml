@@ -16,6 +16,10 @@ spring:
                 - Path=/api/mascotas/**
               # OJO: Quité el 'StripPrefix=1' de tu profe porque tu controlador
               # en el microservicio ya espera la ruta completa "/api/mascotas"
+            - id: ms-geolocalizacion
+              uri: lb://ms-geolocalizacion
+              predicates:
+                - Path=/api/geolocalizacion/**
 
 eureka:
   client:
