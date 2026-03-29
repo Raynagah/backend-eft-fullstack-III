@@ -57,4 +57,10 @@ public class MascotaService {
     public List<ReporteMascota> obtenerReportesPorTipo(String tipoReporte) {
         return mascotaRepository.findByTipoReporte(tipoReporte);
     }
+
+    // Metodo para buscar una mascota por su ID
+    public ReporteMascota obtenerReportePorId(Long id) {
+        return mascotaRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Reporte de mascota no encontrado con ID: " + id));
+    }
 }

@@ -53,4 +53,10 @@ public class MascotaController {
         List<ReporteMascota> reportes = mascotaService.obtenerReportesPorTipo(tipoReporte);
         return ResponseEntity.ok(reportes);
     }
+
+    // Endpoint para obtener una mascota por ID (GET /api/mascotas/{id})
+    @GetMapping("/{id}")
+    public ResponseEntity<ReporteMascota> obtenerPorId(@PathVariable Long id) {
+        return ResponseEntity.ok(mascotaService.obtenerReportePorId(id));
+    }
 }

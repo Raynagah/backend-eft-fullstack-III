@@ -20,6 +20,10 @@ spring:
               uri: lb://ms-geolocalizacion # Debe coincidir con el nombre en Eureka
               predicates:
                 - Path=/api/geolocalizacion/**
+            - id: ms-motor-coincidencias
+              uri: lb://ms-motor-coincidencias
+              predicates:
+                - Path=/api/coincidencias/**
 
 eureka:
   client:
