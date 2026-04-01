@@ -5,6 +5,7 @@ import com.backend.usuarios.model.Usuario;
 import com.backend.usuarios.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
