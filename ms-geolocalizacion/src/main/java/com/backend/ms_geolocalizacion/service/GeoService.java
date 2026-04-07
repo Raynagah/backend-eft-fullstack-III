@@ -20,12 +20,12 @@ public class GeoService {
         return repository.save(ubicacion);
     }
 
-    // 2. Obtener todas (útil para debug)
+    // 2. Obtener todas
     public List<UbicacionAlerta> obtenerTodas() {
         return repository.findAll();
     }
 
-    // 3. ¡EL CORAZÓN! Buscar mascotas dentro de un radio específico
+    // 3. Buscar mascotas dentro de un radio específico
     public List<UbicacionAlerta> buscarCercanas(Double miLat, Double miLon, Double radioMaxKm) {
         List<UbicacionAlerta> todas = repository.findAll();
 
