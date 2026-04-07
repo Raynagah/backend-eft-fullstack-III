@@ -10,9 +10,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@RestController // Indica que esta clase maneja peticiones web y devuelve JSON
-@RequestMapping("/api/mascotas") // La ruta base para todos los endpoints de este archivo
-@RequiredArgsConstructor // Lombok inyecta el servicio automáticamente
+@RestController
+@RequestMapping("/api/mascotas") 
+@RequiredArgsConstructor 
 public class MascotaController {
 
     private final MascotaService mascotaService;
