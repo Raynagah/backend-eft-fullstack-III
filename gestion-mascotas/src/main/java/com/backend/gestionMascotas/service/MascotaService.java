@@ -18,20 +18,20 @@ public class MascotaService {
     private final ReporteFactory reporteFactory;
     private final GeolocalizacionClient geoClient;
 
-    // METODO UNIFICADO: Crea, Guarda y Sincroniza
+    
     public ReporteMascota registrarReporte(String tipo, String especie, String raza, String color, String tamano,
                                            String nombre, String telefono, String email, String fotoUrl,
                                            Double lat, Double lng) {
 
-        // 1. Usamos el Factory Method para crear la entidad (como lo tenías antes)
+        
         ReporteMascota nuevoReporte = reporteFactory.crearReporte(
                 tipo, especie, raza, color, tamano, nombre, telefono, email, fotoUrl, lat, lng
         );
 
-        // 2. Guardamos en la base de datos de Mascotas
+
         nuevoReporte = mascotaRepository.save(nuevoReporte);
 
-        // 3. ENVIAR A GEOLOCALIZACIÓN (La comunicación entre microservicios)
+        
         try {
             Map<String, Object> datosGeo = new HashMap<>();
             datosGeo.put("reporteId", nuevoReporte.getId());
@@ -42,8 +42,7 @@ public class MascotaService {
             geoClient.registrarUbicacion(datosGeo);
             System.out.println("Sincronización exitosa con ms-geolocalizacion");
         } catch (Exception e) {
-            // Si falla el microservicio de geo, el reporte de mascota IGUAL se guarda.
-            // Esto se llama "Resiliencia": un fallo en B no mata a A.
+            
             System.err.println("Error al sincronizar con geolocalización: " + e.getMessage());
         }
 
