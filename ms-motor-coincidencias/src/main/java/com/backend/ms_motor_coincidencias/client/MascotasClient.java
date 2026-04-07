@@ -7,7 +7,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 import java.util.List;
 
-// El nombre debe ser el que usaste en el application.yml de Mascotas
 @FeignClient(name = "ms-gestion-mascotas")
 public interface MascotasClient {
 
@@ -15,8 +14,7 @@ public interface MascotasClient {
     @GetMapping("/api/mascotas/{id}")
     ResultadoMatchDTO obtenerMascotaPorId(@PathVariable("id") Long id);
 
-    // Traer todas las mascotas (aquí podríamos optimizar trayendo solo las "ENCONTRADAS",
-    // pero por ahora pedimos todas para el cálculo)
+    // Traer todas las mascotas 
     @GetMapping("/api/mascotas")
     List<ResultadoMatchDTO> obtenerTodasLasMascotas();
 }
