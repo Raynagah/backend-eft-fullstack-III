@@ -8,12 +8,12 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-@Entity // Indica que esta clase es una entidad JPA que se mapeará a una tabla
-@Table(name = "reportes_mascotas") // Nombre de la tabla en tu base de datos
-@Data // Anotación de Lombok que genera Getters, Setters, toString, etc.
-@NoArgsConstructor // Lombok: Genera un constructor vacío (requerido por JPA)
-@AllArgsConstructor // Lombok: Genera un constructor con todos los argumentos
-@Builder // Lombok: Permite crear objetos usando el patrón Builder (muy útil junto al Factory Method)
+@Entity 
+@Table(name = "reportes_mascotas")
+@Data 
+@NoArgsConstructor 
+@AllArgsConstructor 
+@Builder 
 public class ReporteMascota {
 
     @Id
@@ -22,26 +22,24 @@ public class ReporteMascota {
 
     // --- TIPO DE REPORTE ---
     @Column(name = "tipo_reporte", nullable = false)
-    private String tipoReporte; // Ej: "PERDIDA" o "ENCONTRADA" (Aquí actuará tu Factory Method)
+    private String tipoReporte;
 
     // --- CARACTERÍSTICAS FÍSICAS  ---
     @Column(nullable = false)
-    private String especie; // Ej: Perro, Gato
+    private String especie;
 
     private String raza;
 
     @Column(nullable = false)
     private String color;
 
-    private String tamano; // Ej: Pequeño, Mediano, Grande
+    private String tamano; 
 
     // --- FOTOGRAFÍAS  ---
     @Column(name = "fotografia_url")
-    private String fotografiaUrl; // Aquí guardaremos el enlace de Cloudinary o S3, no la imagen física
+    private String fotografiaUrl; 
 
     // --- UBICACIÓN GEOGRÁFICA  ---
-    // Aunque tienes un microservicio de geolocalización, es buena práctica guardar
-    // las coordenadas de origen en el reporte principal
     private Double latitud;
     private Double longitud;
 
@@ -53,14 +51,13 @@ public class ReporteMascota {
     private String telefonoContacto;
 
     @Column(name = "email_contacto")
-    @JsonProperty("emailContacto") // Esto le dice a Jackson: "Búscalo así en el JSON"
+    @JsonProperty("emailContacto") 
     private String emailContacto;
 
     // --- METADATOS ---
     @Column(name = "fecha_reporte")
     private LocalDateTime fechaReporte;
 
-    // JPA ejecutará este metodo justo antes de insertar el registro en la base de datos
     @PrePersist
     protected void onCreate() {
         this.fechaReporte = LocalDateTime.now();
