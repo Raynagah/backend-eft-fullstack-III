@@ -6,5 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface UbicacionAlertaRepository extends JpaRepository<UbicacionAlerta, Long> {
-    // Aquí podrías agregar búsquedas personalizadas en el futuro
+    
 }
