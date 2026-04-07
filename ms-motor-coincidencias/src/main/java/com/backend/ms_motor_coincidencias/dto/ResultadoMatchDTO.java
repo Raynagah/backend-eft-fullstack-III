@@ -16,6 +16,6 @@ public class ResultadoMatchDTO {
     private String tipoReporte;
     private String fotografiaUrl;
 
-    // ¡El dato estrella!
+    
     private Double porcentajeSimilitud;
 }
