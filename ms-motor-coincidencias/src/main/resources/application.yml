@@ -5,7 +5,6 @@ spring:
   application:
     name: ms-motor-coincidencias
   datasource:
-    # Como acordamos, usamos la misma base de datos Neon
     url: jdbc:postgresql://ep-dawn-night-an2au2vx-pooler.c-6.us-east-1.aws.neon.tech/sanos_y_salvos_db?sslmode=require&channelBinding=require
     username: neondb_owner
     password: npg_nGytqPe5RDo6
