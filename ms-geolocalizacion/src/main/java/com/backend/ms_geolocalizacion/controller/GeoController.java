@@ -29,7 +29,7 @@ public class GeoController {
         return ResponseEntity.ok(geoService.obtenerTodas());
     }
 
-    // 3. ¡EL MÁS IMPORTANTE! Buscar por radio (GET /api/geolocalizacion/cercanos)
+    // 3. Buscar por radio (GET /api/geolocalizacion/cercanos)
     @GetMapping("/cercanos")
     public ResponseEntity<List<UbicacionAlerta>> buscarCercanas(
             @RequestParam Double lat,
