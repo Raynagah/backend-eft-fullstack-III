@@ -33,7 +33,7 @@ public class CoincidenciaService {
     private double calcularPorcentaje(ResultadoMatchDTO perdida, ResultadoMatchDTO encontrada) {
         double puntaje = 0.0;
 
-        // 1. REGLA ABSOLUTA: Si la especie no es la misma, es 0% (un gato no es un perro)
+        // 1. Si la especie no es la misma, es 0% (un gato no es un perro)
         if (!sonIguales(perdida.getEspecie(), encontrada.getEspecie())) {
             return 0.0;
         }
