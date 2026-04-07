@@ -35,7 +35,7 @@ public class CoincidenciaController {
                 .filter(m -> m.getTipoReporte().equalsIgnoreCase(tipoBuscado))
                 .collect(Collectors.toList());
 
-        // 4. ¡PASAMOS LOS DATOS AL MOTOR MATEMÁTICO!
+        // 4. Pasamos los datos al motor matemático xd
         List<ResultadoMatchDTO> resultados = coincidenciaService.evaluarCoincidencias(mascotaPerdida, candidatas);
 
         return ResponseEntity.ok(resultados);
