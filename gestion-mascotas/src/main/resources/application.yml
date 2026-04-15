@@ -25,3 +25,15 @@ eureka:
   client:
     service-url:
       defaultZone: http://localhost:8761/eureka/
+
+# CONFIGURACIÓN DE SWAGGER / OPENAPI
+springdoc:
+  show-actuator: true 
+  swagger-ui:
+    use-root-path: true
+    path: /swagger-ui.html
+    operations-sorter: alpha # Ordena los endpoints alfabéticamente
+    tags-sorter: alpha
+  api-docs:
+    path: /api/mascotas/v3/api-docs
+  
