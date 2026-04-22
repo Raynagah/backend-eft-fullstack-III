@@ -38,3 +38,5 @@ springdoc:
     urls:
       - name: "Mascotas"
         url: /api/mascotas/v3/api-docs
+      - name: "Usuarios"
+        url: /api/usuarios/v3/api-docs

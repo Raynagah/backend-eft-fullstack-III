@@ -1,5 +1,6 @@
 package com.backend.usuarios.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
@@ -36,6 +37,10 @@ public class Usuario {
     @Column(unique = true)
     private String correo;
 
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    @Column(nullable = false)
+    private String password;
+
     @NotBlank(message = "El teléfono es obligatorio")
     private String telefono;
 
@@ -45,4 +50,7 @@ public class Usuario {
     private String ocupacion; // opcional
 
     private String direccion; // opcional
+
+    @Column(name = "session_id")
+    private String sessionId;
 }
