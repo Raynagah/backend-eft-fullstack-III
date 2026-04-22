@@ -1,6 +1,11 @@
 package com.backend.usuarios.dto;
 
-import jakarta.validation.constraints.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 public record UsuarioRequestDTO(
 
@@ -8,7 +13,7 @@ public record UsuarioRequestDTO(
         @Size(min = 3, max = 50)
         String nombre,
 
-        @NotNull
+        @NotNull(message = "La edad es obligatoria y tiene extensión entre 18 y 100")
         @Min(18)
         @Max(100)
         Integer edad,
@@ -17,7 +22,7 @@ public record UsuarioRequestDTO(
         String genero,
 
         @Email
-        @NotBlank
+        @NotBlank(message = "El correo es obligatorio")
         String correo,
 
         @NotBlank(message = "El teléfono es obligatorio")
@@ -27,5 +32,6 @@ public record UsuarioRequestDTO(
 
         String ocupacion,
 
+        @NotBlank(message = "La dirección es obligatoria")
         String direccion
 ) {}
