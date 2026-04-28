@@ -7,6 +7,11 @@ import jakarta.validation.constraints.Size;
 
 @Schema(description = "Objeto de transferencia para la creación de reportes de mascotas")
 public record ReporteRequestDTO(
+        //Campo para evitar reportes anónimos
+        @Schema(description = "Identificador único del usuario que realiza el reporte", example = "125")
+        @NotNull(message = "El ID de usuario es obligatorio para vincular el reporte")
+        Long usuarioId,
+
         @Schema(description = "Define si la mascota fue perdida o encontrada", example = "PERDIDA")
         String tipoReporte,
 
@@ -45,7 +50,7 @@ public record ReporteRequestDTO(
 
         @Schema(description = "URL de la imagen almacenada en la nube", example = "https://mi-storage.com/foto-perro.jpg")
         String fotografiaUrl,
-        
+
         @Schema(description = "Latitud geográfica", example = "-34.6037")
         @NotNull
         Double latitud,

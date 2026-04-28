@@ -5,13 +5,14 @@ import org.springframework.stereotype.Component;
 import com.backend.gestionMascotas.dto.ReporteRequestDTO;
 import com.backend.gestionMascotas.model.ReporteMascota;
 
-@Component 
+@Component
 public class ReporteFactory {
 
     public ReporteMascota crearReporte(ReporteRequestDTO dto) {
-        
+
         // Preparamos el builder con los datos comunes del DTO
         ReporteMascota.ReporteMascotaBuilder builder = ReporteMascota.builder()
+                .usuarioId(dto.usuarioId())
                 .especie(dto.especie())
                 .raza(dto.raza())
                 .color(dto.color())
@@ -25,7 +26,7 @@ public class ReporteFactory {
 
         //lógica de negocio del Factory
         String tipo = dto.tipoReporte().toUpperCase();
-        
+
         if ("PERDIDA".equals(tipo) || "ENCONTRADA".equals(tipo)) {
             return builder.tipoReporte(tipo).build();
         } else {
