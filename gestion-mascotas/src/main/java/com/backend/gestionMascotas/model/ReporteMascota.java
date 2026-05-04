@@ -1,16 +1,8 @@
 package com.backend.gestionMascotas.model;
 
 import java.time.LocalDateTime;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
-
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -19,17 +11,26 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@Entity 
+@Entity
 @Table(name = "reportes_mascotas")
-@Data 
-@NoArgsConstructor 
-@AllArgsConstructor 
-@Builder 
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class ReporteMascota {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    // Actualizado para coincidir con el DTO y ser obligatorio
+    @Column(name = "usuario_id", nullable = false)
+    @NotNull(message = "El ID de usuario es obligatorio")
+    private Long usuarioId;
+
+    // NUEVO: Campo para el Patrón Saga (Requisito Bloque 3)
+    @Column(name = "saga_status", nullable = false)
+    private String sagaStatus;
 
     @NotBlank(message = "El tipo de reporte no puede estar vacío")
     @Column(name = "tipo_reporte", nullable = false)
@@ -47,10 +48,10 @@ public class ReporteMascota {
     @Column(nullable = false)
     private String color;
 
-    private String tamano; 
+    private String tamano;
 
     @Column(name = "fotografia_url")
-    private String fotografiaUrl; 
+    private String fotografiaUrl;
 
     @NotNull(message = "La latitud es obligatoria")
     private Double latitud;
@@ -69,7 +70,7 @@ public class ReporteMascota {
     @Email(message = "El formato del email no es válido")
     @NotBlank(message = "El email de contacto es obligatorio")
     @Column(name = "email_contacto", nullable = false)
-    @JsonProperty("emailContacto") 
+    @JsonProperty("emailContacto")
     private String emailContacto;
 
     @Column(name = "fecha_reporte")
@@ -78,5 +79,9 @@ public class ReporteMascota {
     @PrePersist
     protected void onCreate() {
         this.fechaReporte = LocalDateTime.now();
+        // Inicializamos el estado de la saga automáticamente al crear el registro
+        if (this.sagaStatus == null) {
+            this.sagaStatus = "PENDING";
+        }
     }
 }
