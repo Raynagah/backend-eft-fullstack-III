@@ -72,8 +72,10 @@ services:
     environment:
       - SPRING_APPLICATION_NAME=ms-bff
       - SERVER_PORT=8087
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
       - SERVICES_MASCOTAS_URL=http://ms-gestion-mascotas:8081
-      - SERVICES_GEOLOCALIZACION_URL=http://ms-geolocalizacion:8082
+      - SERVICES_GEOLOCALIZACION_URL=http://ms-geolocalizacion:8083
     depends_on:
+      - eureka-server
       - ms-gestion-mascotas
       - ms-geolocalizacion
