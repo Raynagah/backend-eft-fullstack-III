@@ -1,10 +1,17 @@
-# Puerto y nombre que utiliza este microservicio o.O
-server.port=${SERVER_PORT:8087}
-spring.application.name=ms-bff
+server:
+  port: ${SERVER_PORT:8087}
 
-# Eureka en Docker
-eureka.client.serviceUrl.defaultZone=${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:http://localhost:8761/eureka/}
-  
-# URLs de los Microservicios
-services.mascotas.url=${SERVICES_MASCOTAS_URL:http://localhost:8081}
-services.geolocalizacion.url=${SERVICES_GEOLOCALIZACION_URL:http://localhost:8083}
+spring:
+  application:
+    name: ms-bff
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:http://localhost:8761/eureka/}
+
+services:
+  mascotas:
+    url: ${SERVICES_MASCOTAS_URL:http://localhost:8081}
+  geolocalizacion:
+    url: ${SERVICES_GEOLOCALIZACION_URL:http://localhost:8083}

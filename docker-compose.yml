@@ -32,7 +32,6 @@ services:
     depends_on:
       - eureka-server
 
-
   # 4. Geolocalización
   ms-geolocalizacion:
     build: ./ms-geolocalizacion
@@ -43,6 +42,7 @@ services:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
     depends_on:
       - eureka-server
+
   # 5. Coincidencias
   ms-motor-coincidencias:
     build: ./ms-motor-coincidencias
@@ -53,6 +53,7 @@ services:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
     depends_on:
       - eureka-server
+
   # 6. Usuarios
   ms-usuarios:
     build: ./usuarios
@@ -63,12 +64,13 @@ services:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
     depends_on:
       - eureka-server
+
   # 7. BFF
   ms-bff:
-    build: ./ms-bff
+    build: ./bff
     container_name: ms-bff
     ports:
-      - "8087:8087" # puerto 8086 para ms-notificaciones
+      - "8087:8087"
     environment:
       - SPRING_APPLICATION_NAME=ms-bff
       - SERVER_PORT=8087
