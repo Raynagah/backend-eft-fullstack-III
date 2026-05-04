@@ -4,6 +4,7 @@ import com.backend.bff.dto.MascotaCardDTO;
 import com.backend.bff.dto.MascotaDetalleCompletoDTO;
 import com.backend.bff.dto.WebReporteRequestDTO;
 import com.backend.bff.service.BffMascotaService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -29,11 +30,9 @@ public class BffMascotaController {
     }
 
     @PostMapping("/reportar")
-    public ResponseEntity<?> crearReporte(@RequestBody WebReporteRequestDTO webDto) {
-        // Delegamos la creación al servicio
+    public ResponseEntity<?> crearReporte(@Valid @RequestBody WebReporteRequestDTO webDto) {
+        // Si llega aquí, es porque los datos ya son válidos
         var response = bffService.crearNuevoReporte(webDto);
-
-        // Devolvemos 202 ACCEPTED porque el proceso de la Saga es asíncrono
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(response);
     }
 }
