@@ -15,7 +15,7 @@ spring:
               predicates:
                 - Path=/api/mascotas/**
             - id: ms-geolocalizacion
-              uri: lb://ms-geolocalizacion 
+              uri: lb://ms-geolocalizacion
               predicates:
                 - Path=/api/geolocalizacion/**
             - id: ms-motor-coincidencias
@@ -26,15 +26,21 @@ spring:
               uri: lb://ms-usuarios
               predicates:
                 - Path=/api/usuarios/**
+            - id: ms-bff
+              uri: lb://ms-bff
+              predicates:
+                - Path=/api/v1/web/**
 
 eureka:
   client:
     service-url:
-      defaultZone: http://localhost:8761/eureka/
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
 
 springdoc:
   swagger-ui:
     path: /swagger-ui.html
     urls:
+      - name: "BFF - Web API"
+        url: /api/v1/web/v3/api-docs
       - name: "Mascotas"
         url: /api/mascotas/v3/api-docs

@@ -1,0 +1,6 @@
+server.port=${SERVER_PORT:8087}
+spring.application.name=ms-bff
+  
+  # Si no encuentra la variable de entorno, usa localhost (para pruebas locales fuera de docker)
+services.mascotas.url=${SERVICES_MASCOTAS_URL:http://localhost:8081}
+services.geolocalizacion.url=${SERVICES_GEOLOCALIZACION_URL:http://localhost:8082}
