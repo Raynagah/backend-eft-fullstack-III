@@ -1,30 +1,29 @@
 version: '3.8'
 
 services:
-  # 1. EL RADAR (EUREKA)
+  # 1. EUREKA
   eureka-server:
-    build: ./eureka-server # Nombre de la carpeta de tu proyecto Eureka
+    build: ./eureka-server
     container_name: eureka-server
     ports:
       - "8761:8761"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
 
-  # 2. TU MICROSERVICIO DE MASCOTAS
+  # 2. MICROSERVICIO DE MASCOTAS
   ms-gestion-mascotas:
-    build: ./gestion-mascotas # Nombre de tu carpeta del microservicio
+    build: ./gestion-mascotas
     container_name: ms-gestion-mascotas
     ports:
       - "8081:8081"
     environment:
-      # ¡Aquí reemplazamos el localhost por el nombre del contenedor de Eureka!
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
     depends_on:
       - eureka-server
 
-  # 3. EL RECEPCIONISTA (API GATEWAY)
+  # 3. API GATEWAY
   api-gateway:
-    build: ./api-gateway # Nombre de tu carpeta del Gateway
+    build: ./api-gateway
     container_name: api-gateway
     ports:
       - "8080:8080"
@@ -33,7 +32,7 @@ services:
     depends_on:
       - eureka-server
 
-
+  # 4. Geolocalización
   ms-geolocalizacion:
     build: ./ms-geolocalizacion
     container_name: ms-geolocalizacion
@@ -43,6 +42,8 @@ services:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
     depends_on:
       - eureka-server
+
+  # 5. Coincidencias
   ms-motor-coincidencias:
     build: ./ms-motor-coincidencias
     container_name: ms-motor-coincidencias
@@ -53,6 +54,7 @@ services:
     depends_on:
       - eureka-server
 
+  # 6. Usuarios
   ms-usuarios:
     build: ./usuarios
     container_name: ms-usuarios
@@ -62,3 +64,20 @@ services:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
     depends_on:
       - eureka-server
+
+  # 7. BFF
+  ms-bff:
+    build: ./bff
+    container_name: ms-bff
+    ports:
+      - "8087:8087"
+    environment:
+      - SPRING_APPLICATION_NAME=ms-bff
+      - SERVER_PORT=8087
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - SERVICES_MASCOTAS_URL=http://ms-gestion-mascotas:8081
+      - SERVICES_GEOLOCALIZACION_URL=http://ms-geolocalizacion:8083
+    depends_on:
+      - eureka-server
+      - ms-gestion-mascotas
+      - ms-geolocalizacion
