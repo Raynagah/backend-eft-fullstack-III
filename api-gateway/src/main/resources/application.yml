@@ -26,6 +26,10 @@ spring:
               uri: lb://ms-usuarios
               predicates:
                 - Path=/api/usuarios/**
+            - id: ms-notificaciones 
+              uri: lb://ms-notificaciones 
+              predicates:
+                - Path=/api/notificaciones/**
 
 eureka:
   client:
@@ -40,3 +44,7 @@ springdoc:
         url: /api/mascotas/v3/api-docs
       - name: "Usuarios"
         url: /api/usuarios/v3/api-docs
+      - name: "Notificaciones"
+        url: /api/notificaciones/v3/api-docs
+      - name: "Coincidencias"
+        url: /api/coincidencias/v3/api-docs

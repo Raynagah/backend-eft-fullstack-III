@@ -1,22 +1,33 @@
 server:
-  port: 8084
+  port: 8086
 
 spring:
   application:
-    name: ms-motor-coincidencias
+    name: ms-notificaciones
+
+  # CONEXIÓN A LA BASE DE DATOS NEON
   datasource:
     url: jdbc:postgresql://ep-dawn-night-an2au2vx-pooler.c-6.us-east-1.aws.neon.tech/sanos_y_salvos_db?sslmode=require&channelBinding=require
     username: neondb_owner
     password: npg_nGytqPe5RDo6
     driver-class-name: org.postgresql.Driver
+
+  # CONFIGURACIÓN DE JPA / HIBERNATE
   jpa:
     hibernate:
       ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    show-sql: true
 
+# CONFIGURACIÓN DE EUREKA CLIENT
 eureka:
   client:
     service-url:
       defaultZone: http://localhost:8761/eureka/
+  instance:
+    prefer-ip-address: true
 
 # CONFIGURACIÓN DE SWAGGER / OPENAPI
 springdoc:
@@ -27,4 +38,4 @@ springdoc:
     operations-sorter: alpha
     tags-sorter: alpha
   api-docs:
-    path: /api/coincidencias/v3/api-docs
+    path: /api/notificaciones/v3/api-docs
