@@ -1,6 +1,7 @@
 package com.backend.usuarios.service;
 
 import com.backend.usuarios.dto.UsuarioRequestDTO;
+import com.backend.usuarios.dto.UsuarioUpdateDTO;
 import com.backend.usuarios.model.Usuario;
 import com.backend.usuarios.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
@@ -76,5 +77,23 @@ public class UsuarioService {
 
         usuario.setSessionId(null);
         repository.save(usuario);
+    }
+
+    public Usuario actualizarUsuario(Long id, UsuarioUpdateDTO dto) {
+        // 1. Verificar si existe
+        Usuario usuario = repository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado con ID: " + id));
+
+        // 2. Actualizar solo los campos permitidos
+        usuario.setNombre(dto.nombre());
+        usuario.setEdad(dto.edad());
+        usuario.setGenero(dto.genero());
+        usuario.setTelefono(dto.telefono());
+        usuario.setFotoUrl(dto.fotoUrl());
+        usuario.setOcupacion(dto.ocupacion());
+        usuario.setDireccion(dto.direccion());
+
+        // El correo y password no se tocan aquí por seguridad
+        return repository.save(usuario);
     }
 }

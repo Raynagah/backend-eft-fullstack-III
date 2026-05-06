@@ -7,5 +7,6 @@ import java.util.List;
 
 @Repository
 public interface NotificacionRepository extends JpaRepository<Notificacion, Long> {
-    List<Notificacion> findByEmailUsuarioOrderByFechaCreacionDesc(String emailUsuario);
+    // La búsqueda se hace por ID, pero el objeto retornado traerá todos los campos (incluido el email)
+    List<Notificacion> findByUsuarioIdOrderByFechaCreacionDesc(Long usuarioId);
 }
