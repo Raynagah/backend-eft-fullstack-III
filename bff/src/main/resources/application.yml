@@ -21,3 +21,14 @@ services:
     url: ${SERVICES_USUARIOS_URL:http://localhost:8085}
   notificaciones:
     url: ${SERVICES_NOTIFICACIONES_URL:http://localhost:8086}
+
+# CONFIGURACIÓN DE SWAGGER / OPENAPI
+springdoc:
+  show-actuator: true
+  swagger-ui:
+    use-root-path: true
+    path: /swagger-ui.html
+    operations-sorter: alpha
+    tags-sorter: alpha
+  api-docs:
+    path: /api/v1/web/v3/api-docs
