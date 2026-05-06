@@ -9,5 +9,10 @@ public class MascotaBaseDTO {
     private String especie;
     private String raza;
     private String color;
-    private String sagaStatus; // Importante para ver si el reporte fue exitoso!!!!!!!!
+    private String descripcion;
+    private String sagaStatus;
+
+    private Long usuarioId;
+
+    private Long ubicacionId;
 }
