@@ -50,18 +50,20 @@ public class CoincidenciaController {
         // 4. Mapeo dinámico a Notificaciones
         List<NotificacionMatchDTO> alertas = resultados.stream()
                 .filter(r -> r.getPorcentajeSimilitud() >= 85.0)
-                .filter(r -> r.getTipoReporte().equalsIgnoreCase("PERDIDA")) 
+                // Eliminamos el filtro de tipo si queremos que notifique a ambos,
+                // o nos aseguramos de que estamos notificando al dueño de la mascota PERDIDA
                 .map(r -> {
                     NotificacionMatchDTO dto = new NotificacionMatchDTO();
+                    // USAMOS getReporteId() que es donde ResultadoMatchDTO guardó el "id" del JSON
                     dto.setReporteId(r.getReporteId());
                     dto.setPorcentajeSimilitud(r.getPorcentajeSimilitud());
                     dto.setFotografiaUrl(r.getFotografiaUrl());
-                    dto.setEmailUsuario(r.getEmailContacto()); 
-                    dto.setTitulo("¡Excelente noticia para tu búsqueda!");
-                    dto.setMensaje("Hemos encontrado una mascota que coincide en un " 
-                                    + r.getPorcentajeSimilitud() + "% con tu reporte de pérdida.");
-                    dto.setFechaCreacion(LocalDateTime.now());
-                    dto.setLeido(false);
+                    dto.setTitulo("¡Posible coincidencia encontrada!");
+                    dto.setMensaje("Hay un match del " + r.getPorcentajeSimilitud() + "% con un reporte.");
+
+                    // IMPORTANTE: El MS Notificaciones espera emailUsuario, asegúrate de enviarlo
+                    dto.setEmailUsuario(r.getEmailContacto());
+
                     return dto;
                 })
                 .collect(Collectors.toList());

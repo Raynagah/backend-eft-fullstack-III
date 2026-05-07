@@ -1,6 +1,7 @@
 package com.backend.usuarios.controller;
 
 import com.backend.usuarios.dto.UsuarioRequestDTO;
+import com.backend.usuarios.dto.UsuarioUpdateDTO;
 import com.backend.usuarios.model.Usuario;
 import com.backend.usuarios.service.UsuarioService;
 import jakarta.validation.Valid;
@@ -63,5 +64,10 @@ public class UsuarioController {
         return ResponseEntity.ok("Se ha cerrado sesión");
     }
 
+    @Operation(summary = "Actualizar perfil de usuario", description = "Permite modificar datos personales. No permite cambiar correo ni contraseña.")
+    @PutMapping("/{id}")
+    public ResponseEntity<Usuario> actualizar(@PathVariable Long id, @Valid @RequestBody UsuarioUpdateDTO dto) {
+        return ResponseEntity.ok(service.actualizarUsuario(id, dto));
+    }
 
 }

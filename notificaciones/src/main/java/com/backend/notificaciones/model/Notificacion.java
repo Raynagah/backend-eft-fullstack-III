@@ -12,8 +12,9 @@ public class Notificacion {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Long reporteId;      // ID del reporte del dueño (Mascota Perdida)
-    private String emailUsuario; 
+    private Long reporteId;
+    private Long usuarioId;      // Para la búsqueda técnica
+    private String emailUsuario; // Para mostrar en el GET
     private Double porcentajeSimilitud;
     private String titulo;
     private String mensaje;
