@@ -1,11 +1,20 @@
-# Usamos JRE (solo lo necesario para ejecutar) y Alpine (Linux súper ligero)
-FROM eclipse-temurin:17-jre-alpine
-
-# Mantenemos tu buena práctica de usar una carpeta específica
+# --- ETAPA 1: Compilación ---
+FROM maven:3.8.5-openjdk-17-slim AS build
 WORKDIR /app
 
-# Copiamos el ejecutable
-COPY target/*.jar app.jar
+# Optimizamos cache de Docker: Copiamos primero el pom para descargar dependencias
+COPY pom.xml .
+RUN mvn dependency:go-offline
 
-# Ejecutamos leyendo los límites de RAM
+# Copiar el código y compilar
+COPY src ./src
+RUN mvn clean package -DskipTests
+
+# --- ETAPA 2: Ejecución ---
+FROM eclipse-temurin:17-jre-alpine
+WORKDIR /app
+
+# Copiamos el JAR generado en la etapa anterior
+COPY --from=build /app/target/*.jar app.jar
+
 ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]

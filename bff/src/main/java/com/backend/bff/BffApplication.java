@@ -10,7 +10,6 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 @SpringBootApplication
 @EnableFeignClients
 @EnableDiscoveryClient
-@OpenAPIDefinition(servers = {@Server(url = "/", description = "Servidor Local")})
 public class BffApplication {
 
 	public static void main(String[] args) {

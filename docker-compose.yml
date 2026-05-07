@@ -13,6 +13,11 @@ services:
     volumes:
       - pg_data_local:/var/lib/postgresql/data
       - ./init-dbs.sql:/docker-entrypoint-initdb.d/init-dbs.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     restart: always
 
   # 1. EUREKA
@@ -23,6 +28,13 @@ services:
       - "8761:8761"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8761/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    depends_on:
+      - postgres-db
 
   # 2. MICROSERVICIO DE MASCOTAS
   ms-gestion-mascotas:
@@ -37,8 +49,10 @@ services:
       - DB_PASSWORD=admin
       - JAVA_OPTS=-Xms128m -Xmx256m
     depends_on:
-      - eureka-server
-      - postgres-db
+      postgres-db:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
 
   # 3. API GATEWAY
   api-gateway:
@@ -50,7 +64,8 @@ services:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
       - JAVA_OPTS=-Xms128m -Xmx256m
     depends_on:
-      - eureka-server
+      eureka-server:
+        condition: service_healthy
 
   # 4. MICROSERVICIO DE GEOLOCALIZACIÓN
   ms-geolocalizacion:
@@ -65,8 +80,10 @@ services:
       - DB_PASSWORD=admin
       - JAVA_OPTS=-Xms128m -Xmx256m
     depends_on:
-      - eureka-server
-      - postgres-db
+      postgres-db:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
 
   # 5. MOTOR DE COINCIDENCIAS
   ms-motor-coincidencias:
@@ -78,7 +95,8 @@ services:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
       - JAVA_OPTS=-Xms128m -Xmx256m
     depends_on:
-      - eureka-server
+      eureka-server:
+        condition: service_healthy
 
   # 6. MICROSERVICIO DE USUARIOS
   ms-usuarios:
@@ -93,8 +111,10 @@ services:
       - DB_PASSWORD=admin
       - JAVA_OPTS=-Xms128m -Xmx256m
     depends_on:
-      - eureka-server
-      - postgres-db
+      postgres-db:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
 
   # 6.1 MICROSERVICIO DE NOTIFICACIONES
   ms-notificaciones:
@@ -109,8 +129,10 @@ services:
       - DB_PASSWORD=admin
       - JAVA_OPTS=-Xms128m -Xmx256m
     depends_on:
-      - eureka-server
-      - postgres-db
+      postgres-db:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
 
   # 7. BFF
   ms-bff:
@@ -126,10 +148,12 @@ services:
       - SERVICES_GEOLOCALIZACION_URL=http://ms-geolocalizacion:8083
       - JAVA_OPTS=-Xms128m -Xmx256m
     depends_on:
-      - eureka-server
-      - ms-gestion-mascotas
-      - ms-geolocalizacion
+      eureka-server:
+        condition: service_healthy
+      ms-gestion-mascotas:
+        condition: service_started
+      ms-geolocalizacion:
+        condition: service_started
 
-# VOLUMEN DE PERSISTENCIA
 volumes:
   pg_data_local:
