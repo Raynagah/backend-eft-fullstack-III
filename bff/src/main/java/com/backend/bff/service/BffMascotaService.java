@@ -1,13 +1,11 @@
 package com.backend.bff.service;
 
-import com.backend.bff.client.MascotasClient;
-import com.backend.bff.client.GeolocalizacionClient;
-import com.backend.bff.dto.MascotaCardDTO;
-import com.backend.bff.dto.MascotaDetalleCompletoDTO;
-import com.backend.bff.dto.WebReporteRequestDTO;
+import com.backend.bff.client.*;
+import com.backend.bff.dto.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -17,50 +15,94 @@ public class BffMascotaService {
 
     private final MascotasClient mascotaClient;
     private final GeolocalizacionClient geoClient;
+    private final UsuarioClient usuarioClient;
+    private final CoincidenciasClient coincidenciasClient;
+    private final NotificacionClient notificacionClient;
 
     public List<MascotaCardDTO> obtenerDashboard() {
         return mascotaClient.obtenerTodas().stream()
                 .map(m -> MascotaCardDTO.builder()
                         .id(m.getId())
-                        .nombre(m.getNombre())
-                        .resumen(m.getEspecie() + " - " + m.getRaza())
-                        .estado(m.getSagaStatus())
+                        // Como no hay 'nombre', armamos un título descriptivo para el Frontend
+                        .nombre(m.getTipoReporte() + ": " + m.getEspecie() + " " + m.getRaza())
+                        .resumen("Color: " + m.getColor() + " - Tamaño: " + m.getTamano())
+                        .estado(m.getSagaStatus()) // Ahora coincide
                         .build())
                 .collect(Collectors.toList());
     }
 
     public MascotaDetalleCompletoDTO obtenerDetalleMascota(Long id) {
-        // 1. Llamamos a Mascotas
+        // 1. Datos base de la Mascota
         var mascota = mascotaClient.obtenerPorId(id);
 
-        // 2. Llamamos a Geo (con manejo de error por si el micro está caído)
-        Double lat = null;
-        Double lon = null;
-        try {
-            var ubicacion = geoClient.obtenerUbicacionPorId(id);
-            if (ubicacion != null) {
-                lat = ubicacion.getLatitud();
-                lon = ubicacion.getLongitud();
-            }
-        } catch (Exception e) {
-            System.err.println("BFF: ms-geolocalizacion no respondió para el ID " + id);
-        }
-
-        // 3. Construimos el DTO para Vue
-        return MascotaDetalleCompletoDTO.builder()
+        var detalle = MascotaDetalleCompletoDTO.builder()
                 .id(mascota.getId())
-                .nombre(mascota.getNombre())
+                .tipoReporte(mascota.getTipoReporte())
                 .especie(mascota.getEspecie())
                 .raza(mascota.getRaza())
                 .color(mascota.getColor())
-                .estadoSaga(mascota.getSagaStatus())
-                .latitud(lat)
-                .longitud(lon)
+                .tamano(mascota.getTamano())
+                .fotografiaUrl(mascota.getFotografiaUrl())
+                .sagaStatus(mascota.getSagaStatus())
+                .fechaReporte(mascota.getFechaReporte())
+                // Asignamos POR DEFECTO los datos que ya vienen del ms-mascotas
+                .latitud(mascota.getLatitud())
+                .longitud(mascota.getLongitud())
+                .contactoNombre(mascota.getNombreContacto())
+                .contactoTelefono(mascota.getTelefonoContacto())
+                .contactoEmail(mascota.getEmailContacto())
                 .build();
+
+        // 2. Integración con Geolocalización (Enriquecimiento)
+        try {
+            var ubicacion = geoClient.obtenerUbicacionPorId(id);
+            if (ubicacion != null && ubicacion.getLatitud() != null) {
+                // Si Geo responde, sobreescribimos con datos más precisos
+                detalle.setLatitud(ubicacion.getLatitud());
+                detalle.setLongitud(ubicacion.getLongitud());
+            }
+        } catch (Exception e) {
+            System.err.println("BFF Info: ms-geo falló. Usando coordenadas base de la mascota.");
+        }
+
+        // 3. Integración con Usuarios (Enriquecimiento)
+        try {
+            var usuario = usuarioClient.obtenerUsuarioPorId(mascota.getUsuarioId());
+            if (usuario != null && usuario.getNombre() != null) {
+                // Si el micro de Usuarios responde, actualizamos con la info fresca del perfil
+                detalle.setContactoNombre(usuario.getNombre());
+                detalle.setContactoTelefono(usuario.getTelefono());
+            }
+        } catch (Exception e) {
+            System.err.println("BFF Info: ms-usuarios falló. Usando contacto base de la mascota.");
+        }
+
+        // 4. Integración con Motor de Coincidencias
+        try {
+            detalle.setPosiblesCoincidencias(coincidenciasClient.obtenerCoincidenciasPorMascota(id));
+        } catch (Exception e) {
+            detalle.setPosiblesCoincidencias(new ArrayList<>());
+            System.err.println("BFF Error: ms-motor-coincidencias no respondió");
+        }
+
+        return detalle;
     }
 
     public Object crearNuevoReporte(WebReporteRequestDTO dto) {
-        System.out.println("BFF: Recibiendo reporte para la mascota: " + dto.getNombre());
-        return mascotaClient.crear(dto);
+        // Ajustamos el log ya que dto.getNombre() probablemente tampoco exista
+        System.out.println("BFF: Recibiendo reporte para: " + dto.getEspecie() + " " + dto.getRaza());
+
+        // 1. Crear la mascota en el microservicio core
+        Object response = mascotaClient.crear(dto);
+
+        // 2. Disparar notificación asíncrona (Fire and forget)
+        try {
+            String mensaje = "Se ha reportado: " + dto.getEspecie() + " " + dto.getRaza();
+            notificacionClient.enviarAlertaMascota(new NotificacionRequestDTO(dto.getUsuarioId(), mensaje));
+        } catch (Exception e) {
+            System.err.println("BFF Error: No se pudo enviar la notificación, pero el reporte fue creado.");
+        }
+
+        return response;
     }
 }
