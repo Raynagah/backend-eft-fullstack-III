@@ -9,6 +9,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 public interface GeolocalizacionClient {
 
     // Este es el que usaremos para el agregado o.O
-    @GetMapping("/api/geolocalizacion/reporte/{id}")
+    @GetMapping("/api/geolocalizacion/{id}")
     UbicacionDTO obtenerUbicacionPorId(@PathVariable("id") Long id);
 }

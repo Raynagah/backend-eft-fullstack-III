@@ -62,7 +62,8 @@ public class BffMascotaService {
                 detalle.setLongitud(ubicacion.getLongitud());
             }
         } catch (Exception e) {
-            System.err.println("BFF Info: ms-geo falló. Usando coordenadas base de la mascota.");
+            //System.err.println("BFF Info: ms-geo falló. Usando coordenadas base de la mascota.");
+            System.err.println("ERROR REAL EN COINCIDENCIAS: " + e.getMessage());
         }
 
         // 3. Integración con Usuarios (Enriquecimiento)
@@ -72,9 +73,13 @@ public class BffMascotaService {
                 // Si el micro de Usuarios responde, actualizamos con la info fresca del perfil
                 detalle.setContactoNombre(usuario.getNombre());
                 detalle.setContactoTelefono(usuario.getTelefono());
+                detalle.setContactoEmail(usuario.getEmail());
+
             }
         } catch (Exception e) {
-            System.err.println("BFF Info: ms-usuarios falló. Usando contacto base de la mascota.");
+            System.err.println("Error real en ms-usuarios: " + e.getMessage());
+            e.printStackTrace(); // Esto dirá en la consola si es un 404 (ruta) o error de mapeo
+            //System.err.println("BFF Info: ms-usuarios falló. Usando contacto base de la mascota.");
         }
 
         // 4. Integración con Motor de Coincidencias
@@ -82,7 +87,10 @@ public class BffMascotaService {
             detalle.setPosiblesCoincidencias(coincidenciasClient.obtenerCoincidenciasPorMascota(id));
         } catch (Exception e) {
             detalle.setPosiblesCoincidencias(new ArrayList<>());
-            System.err.println("BFF Error: ms-motor-coincidencias no respondió");
+            //System.err.println("BFF Error: ms-motor-coincidencias no respondió");
+            // Esto te dirá si es un 404 (Ruta mal), 500 (Error en el micro) o Connection Refused (Puerto mal)
+            System.err.println("ERROR REAL EN COINDICENCIAS: " + e.getMessage());
+
         }
 
         return detalle;
@@ -100,7 +108,9 @@ public class BffMascotaService {
             String mensaje = "Se ha reportado: " + dto.getEspecie() + " " + dto.getRaza();
             notificacionClient.enviarAlertaMascota(new NotificacionRequestDTO(dto.getUsuarioId(), mensaje));
         } catch (Exception e) {
-            System.err.println("BFF Error: No se pudo enviar la notificación, pero el reporte fue creado.");
+            //System.err.println("BFF Error: No se pudo enviar la notificación, pero el reporte fue creado.");
+            // Esto te dirá si es un 404 (Ruta mal), 500 (Error en el micro) o Connection Refused (Puerto mal)
+            System.err.println("ERROR REAL EN NOTIFICACIONES: " + e.getMessage());
         }
 
         return response;

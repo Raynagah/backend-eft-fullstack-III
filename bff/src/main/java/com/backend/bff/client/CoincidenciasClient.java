@@ -10,6 +10,7 @@ import java.util.List;
 @FeignClient(name = "ms-motor-coincidencias", url = "${services.coincidencias.url}")
 public interface CoincidenciasClient {
 
-    @GetMapping("/api/motor-coincidencias/mascota/{id}")
+    @GetMapping("/api/coincidencias/buscar/{id}")
     List<CoincidenciaDTO> obtenerCoincidenciasPorMascota(@PathVariable("id") Long id);
+
 }
