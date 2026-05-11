@@ -20,4 +20,7 @@ public class MascotaCardDTO {
 
     // El estado del patrón Saga (PENDING, COMPLETED, etc.)
     private String estado;
+
+    private String tipoReporte;
+    private String fotografiaUrl;
 }

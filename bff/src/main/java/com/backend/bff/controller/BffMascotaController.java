@@ -19,9 +19,12 @@ public class BffMascotaController {
 
     private final BffMascotaService bffService;
 
-    @GetMapping("/dashboard")
-    public ResponseEntity<List<MascotaCardDTO>> obtenerDashboard() {
-        return ResponseEntity.ok(bffService.obtenerDashboard());
+    // Quitamos "/dashboard" para que responda a la ruta base del controlador
+    // Ahora Axios api.get('/web/mascotas') entrará directamente aquí.
+    @GetMapping
+    public ResponseEntity<List<MascotaCardDTO>> obtenerTodasLasMascotas() {
+        List<MascotaCardDTO> mascotas = bffService.obtenerDashboard();
+        return ResponseEntity.ok(mascotas);
     }
 
     @GetMapping("/detalle/{id}")
@@ -31,7 +34,6 @@ public class BffMascotaController {
 
     @PostMapping("/reportar")
     public ResponseEntity<?> crearReporte(@Valid @RequestBody WebReporteRequestDTO webDto) {
-        // Si llega aquí, es porque los datos ya son válidos
         var response = bffService.crearNuevoReporte(webDto);
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(response);
     }

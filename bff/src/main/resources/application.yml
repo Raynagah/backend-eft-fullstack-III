@@ -1,6 +1,9 @@
 server:
   port: ${SERVER_PORT:8087}
 
+jwt:
+  secret: "MiClaveSuperSecretaParaMascotas123456789!"
+
 spring:
   application:
     name: ms-bff

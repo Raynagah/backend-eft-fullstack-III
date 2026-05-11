@@ -27,6 +27,8 @@ public class BffMascotaService {
                         .nombre(m.getTipoReporte() + ": " + m.getEspecie() + " " + m.getRaza())
                         .resumen("Color: " + m.getColor() + " - Tamaño: " + m.getTamano())
                         .estado(m.getSagaStatus()) // Ahora coincide
+                        .tipoReporte(m.getTipoReporte())
+                        .fotografiaUrl(m.getFotografiaUrl())
                         .build())
                 .collect(Collectors.toList());
     }

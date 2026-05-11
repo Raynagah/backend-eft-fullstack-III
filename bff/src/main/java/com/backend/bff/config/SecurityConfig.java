@@ -4,6 +4,7 @@ import com.backend.bff.security.SessionAuthFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -35,9 +36,9 @@ public class SecurityConfig {
                 // 4. Configuramos las reglas de las rutas
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/v1/auth/login").permitAll() // Público
-                        // Si tienes un endpoint de logout, también debes permitirlo o manejarlo
                         .requestMatchers("/api/v1/auth/logout").permitAll()
-                        .anyRequest().authenticated() // Todo lo demás requiere pasar por el filtro
+                        .requestMatchers(HttpMethod.GET, "/api/v1/web/mascotas/**").permitAll()
+                        .anyRequest().authenticated() // Todoo lo demás requiere pasar por el filtro
                 )
                 // 5. Añadimos nuestro filtro personalizado ANTES del filtro estándar de autenticación
                 .addFilterBefore(sessionAuthFilter, UsernamePasswordAuthenticationFilter.class);
@@ -49,7 +50,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:5173")); // Tu frontend Vue
+        configuration.setAllowedOrigins(List.of("http://localhost:5173")); // El frontend Vue
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);

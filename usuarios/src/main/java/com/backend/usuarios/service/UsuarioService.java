@@ -61,7 +61,7 @@ public class UsuarioService {
         repository.save(usuario);
 
         // Utilizamos JwtUtil para generar el token real
-        String token = jwtUtil.generarToken(usuario.getCorreo(), sessionId);
+        String token = jwtUtil.generarToken(usuario.getCorreo(), sessionId, usuario.getId());
 
         // Mapeamos los datos al DTO para que no viaje la contraseña
         UsuarioDTO usuarioDTO = new UsuarioDTO(
