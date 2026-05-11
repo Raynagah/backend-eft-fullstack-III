@@ -4,5 +4,5 @@ public record UsuarioDTO(
         Long id,
         String nombre,
         String telefono,
-        String email // Lo llamamos email para que coincida con lo que espera el BFF/Frontend
+        String correo
 ) {}

@@ -17,4 +17,7 @@ public interface UsuarioClient {
 
     @GetMapping("/api/usuarios/validar-sesion")
     Boolean validarSesion(@RequestParam("id") Long id, @RequestParam("sessionId") String sessionId);
+
+    @PostMapping("/api/usuarios/logout")
+    String logout(@RequestParam("sessionId") String sessionId);
 }

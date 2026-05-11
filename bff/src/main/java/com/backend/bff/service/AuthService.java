@@ -22,4 +22,8 @@ public class AuthService {
         // Le preguntamos al dueño de la base de datos (Neon) si la sesión sigue viva
         return usuarioClient.validarSesion(usuarioId, sessionIdRecibido);
     }
+
+    public void cerrarSesion(String sessionId) {
+        usuarioClient.logout(sessionId);
+    }
 }
