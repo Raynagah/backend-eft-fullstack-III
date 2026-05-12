@@ -5,6 +5,7 @@ CREATE DATABASE db_usuarios;
 CREATE DATABASE db_mascotas;
 CREATE DATABASE db_notificaciones;
 CREATE DATABASE db_geolocalizacion;
+CREATE DATABASE db_coincidencias;
 
 -- =========================================================================
 -- =================       SECCIÓN: USUARIOS         =======================
