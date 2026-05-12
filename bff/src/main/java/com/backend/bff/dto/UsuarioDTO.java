@@ -12,4 +12,10 @@ public class UsuarioDTO {
     // Usamos esta anotación para que Java entienda que en el JSON viene como 'correo'
     @JsonProperty("correo")
     private String email;
+
+    private Integer edad;
+    private String genero;
+    private String direccion;
+    private String ocupacion;
+    private String fotoUrl;
 }

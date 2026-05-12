@@ -1,5 +1,7 @@
 package com.backend.usuarios.service;
 
+import com.backend.usuarios.dto.LoginResponseDTO;
+import com.backend.usuarios.dto.UsuarioDTO;
 import com.backend.usuarios.dto.UsuarioRequestDTO;
 import com.backend.usuarios.dto.UsuarioUpdateDTO;
 import com.backend.usuarios.model.Usuario;
@@ -20,7 +22,6 @@ public class UsuarioService {
     private final JwtUtil jwtUtil;
 
     public Usuario crearUsuario(UsuarioRequestDTO dto) {
-
         Usuario usuario = Usuario.builder()
                 .nombre(dto.nombre())
                 .edad(dto.edad())
@@ -45,7 +46,8 @@ public class UsuarioService {
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado con ID: " + id));
     }
 
-    public String login(String correo, String password) {
+    // --- METODOO DE LOGIN ACTUALIZADO ---
+    public LoginResponseDTO login(String correo, String password) {
 
         Usuario usuario = repository.findByCorreo(correo)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
@@ -55,15 +57,33 @@ public class UsuarioService {
         }
 
         String sessionId = UUID.randomUUID().toString();
-
         usuario.setSessionId(sessionId);
         repository.save(usuario);
 
-        return jwtUtil.generarToken(usuario.getCorreo(), sessionId);
+        // Utilizamos JwtUtil para generar el token real
+        String token = jwtUtil.generarToken(usuario.getCorreo(), sessionId, usuario.getId());
+
+        // Mapeamos los datos al DTO para que no viaje la contraseña
+        UsuarioDTO usuarioDTO = new UsuarioDTO(
+                usuario.getId(),
+                usuario.getNombre(),
+                usuario.getTelefono(),
+                usuario.getCorreo(),
+                usuario.getEdad(),
+                usuario.getGenero(),
+                usuario.getDireccion(),
+                usuario.getOcupacion(),
+                usuario.getFotoUrl()
+        );
+
+        return LoginResponseDTO.builder()
+                .token(token)
+                .sessionId(sessionId)
+                .usuario(usuarioDTO)
+                .build();
     }
 
     public void eliminarUsuario(Long id) {
-
         Usuario usuario = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado con ID: " + id));
 
@@ -71,7 +91,6 @@ public class UsuarioService {
     }
 
     public void logout(String sessionId) {
-
         Usuario usuario = repository.findBySessionId(sessionId)
                 .orElseThrow(() -> new RuntimeException("Sesión no encontrada"));
 
@@ -80,11 +99,9 @@ public class UsuarioService {
     }
 
     public Usuario actualizarUsuario(Long id, UsuarioUpdateDTO dto) {
-        // 1. Verificar si existe
         Usuario usuario = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado con ID: " + id));
 
-        // 2. Actualizar solo los campos permitidos
         usuario.setNombre(dto.nombre());
         usuario.setEdad(dto.edad());
         usuario.setGenero(dto.genero());
@@ -93,7 +110,13 @@ public class UsuarioService {
         usuario.setOcupacion(dto.ocupacion());
         usuario.setDireccion(dto.direccion());
 
-        // El correo y password no se tocan aquí por seguridad
         return repository.save(usuario);
+    }
+
+    // --- NUEVO MÉTODOo PARA VALIDAR LA SESIÓN DESDE EL BFF ---
+    public boolean isSesionValida(Long id, String sessionId) {
+        return repository.findById(id)
+                .map(u -> u.getSessionId() != null && u.getSessionId().equals(sessionId))
+                .orElse(false);
     }
 }

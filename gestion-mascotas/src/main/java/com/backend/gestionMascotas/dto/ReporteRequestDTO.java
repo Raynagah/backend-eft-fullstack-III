@@ -15,6 +15,9 @@ public record ReporteRequestDTO(
         @Schema(description = "Define si la mascota fue perdida o encontrada", example = "PERDIDA")
         String tipoReporte,
 
+        @Schema(description = "Nombre de la mascota", example = "Kuky")
+        String nombre,
+
         @Schema(description = "Especie del animal", example = "Perro")
         @NotBlank(message = "La especie es obligatoria")
         @Size(min = 3, max = 50)

@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import com.backend.usuarios.dto.LoginRequestDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-
+import com.backend.usuarios.dto.LoginResponseDTO;
 import java.util.List;
 
 @RestController
@@ -44,10 +44,16 @@ public class UsuarioController {
         return ResponseEntity.ok(service.obtenerPorId(id));
     }
 
-    @Operation(summary = "Login de usuario (retorna JWT)")
+    @Operation(summary = "Login de usuario (retorna JWT, User y SessionId)")
     @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody LoginRequestDTO dto) {
+    public ResponseEntity<LoginResponseDTO> login(@RequestBody LoginRequestDTO dto) {
+        // Asumimos que ajustaremos el service para que retorne el objeto completo
         return ResponseEntity.ok(service.login(dto.correo(), dto.password()));
+    }
+    @Operation(summary = "Validar sesión activa (Usado por el BFF)")
+    @GetMapping("/validar-sesion")
+    public ResponseEntity<Boolean> validarSesion(@RequestParam Long id, @RequestParam String sessionId) {
+        return ResponseEntity.ok(service.isSesionValida(id, sessionId));
     }
 
     @Operation(summary = "Eliminar usuario por ID")

@@ -23,10 +23,12 @@ public class BffMascotaService {
         return mascotaClient.obtenerTodas().stream()
                 .map(m -> MascotaCardDTO.builder()
                         .id(m.getId())
-                        // Como no hay 'nombre', armamos un título descriptivo para el Frontend
-                        .nombre(m.getTipoReporte() + ": " + m.getEspecie() + " " + m.getRaza())
+                        .nombre(m.getNombre())
+                        .titulo(m.getTipoReporte() + ": " + m.getEspecie() + " " + m.getRaza())
                         .resumen("Color: " + m.getColor() + " - Tamaño: " + m.getTamano())
-                        .estado(m.getSagaStatus()) // Ahora coincide
+                        .estado(m.getSagaStatus())
+                        .tipoReporte(m.getTipoReporte())
+                        .fotografiaUrl(m.getFotografiaUrl())
                         .build())
                 .collect(Collectors.toList());
     }
@@ -37,6 +39,7 @@ public class BffMascotaService {
 
         var detalle = MascotaDetalleCompletoDTO.builder()
                 .id(mascota.getId())
+                .nombre(mascota.getNombre())
                 .tipoReporte(mascota.getTipoReporte())
                 .especie(mascota.getEspecie())
                 .raza(mascota.getRaza())
@@ -63,7 +66,7 @@ public class BffMascotaService {
             }
         } catch (Exception e) {
             //System.err.println("BFF Info: ms-geo falló. Usando coordenadas base de la mascota.");
-            System.err.println("ERROR REAL EN COINCIDENCIAS: " + e.getMessage());
+            System.err.println("ERROR REAL EN GEOLOCALIZACION: " + e.getMessage());
         }
 
         // 3. Integración con Usuarios (Enriquecimiento)
@@ -74,7 +77,6 @@ public class BffMascotaService {
                 detalle.setContactoNombre(usuario.getNombre());
                 detalle.setContactoTelefono(usuario.getTelefono());
                 detalle.setContactoEmail(usuario.getEmail());
-
             }
         } catch (Exception e) {
             System.err.println("Error real en ms-usuarios: " + e.getMessage());
@@ -88,24 +90,28 @@ public class BffMascotaService {
         } catch (Exception e) {
             detalle.setPosiblesCoincidencias(new ArrayList<>());
             //System.err.println("BFF Error: ms-motor-coincidencias no respondió");
-            // Esto te dirá si es un 404 (Ruta mal), 500 (Error en el micro) o Connection Refused (Puerto mal)
+            // Esto dirá si es un 404 (Ruta mal), 500 (Error en el micro) o Connection Refused (Puerto mal)
             System.err.println("ERROR REAL EN COINDICENCIAS: " + e.getMessage());
-
         }
 
         return detalle;
     }
 
     public Object crearNuevoReporte(WebReporteRequestDTO dto) {
-        // Ajustamos el log ya que dto.getNombre() probablemente tampoco exista
-        System.out.println("BFF: Recibiendo reporte para: " + dto.getEspecie() + " " + dto.getRaza());
+        // Ya que dto.getNombre() sí existe, logueamos mejor la información
+        String nombreMascota = (dto.getNombre() != null && !dto.getNombre().isBlank()) ? dto.getNombre() : "Sin nombre";
+        System.out.println("BFF: Recibiendo reporte para: " + nombreMascota + " (" + dto.getEspecie() + " " + dto.getRaza() + ")");
 
         // 1. Crear la mascota en el microservicio core
         Object response = mascotaClient.crear(dto);
 
         // 2. Disparar notificación asíncrona (Fire and forget)
         try {
+            // Mejoramos el mensaje de alerta para incluir el nombre si existe
             String mensaje = "Se ha reportado: " + dto.getEspecie() + " " + dto.getRaza();
+            if (dto.getNombre() != null && !dto.getNombre().isBlank()) {
+                mensaje += " llamado " + dto.getNombre();
+            }
             notificacionClient.enviarAlertaMascota(new NotificacionRequestDTO(dto.getUsuarioId(), mensaje));
         } catch (Exception e) {
             //System.err.println("BFF Error: No se pudo enviar la notificación, pero el reporte fue creado.");
