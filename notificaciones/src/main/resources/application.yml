@@ -5,11 +5,11 @@ spring:
   application:
     name: ms-notificaciones
 
-  # CONEXIÓN A LA BASE DE DATOS NEON
+  # CONEXIÓN PARAMETRIZADA A LA BASE DE DATOS DOCKER/AWS
   datasource:
-    url: jdbc:postgresql://ep-dawn-night-an2au2vx-pooler.c-6.us-east-1.aws.neon.tech/sanos_y_salvos_db?sslmode=require&channelBinding=require
-    username: neondb_owner
-    password: npg_nGytqPe5RDo6
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/db_notificaciones}
+    username: ${DB_USERNAME:admin}
+    password: ${DB_PASSWORD:admin}
     driver-class-name: org.postgresql.Driver
 
   # CONFIGURACIÓN DE JPA / HIBERNATE
@@ -25,7 +25,7 @@ spring:
 eureka:
   client:
     service-url:
-      defaultZone: http://localhost:8761/eureka/
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
   instance:
     prefer-ip-address: true
 

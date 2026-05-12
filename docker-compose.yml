@@ -1,6 +1,25 @@
 version: '3.8'
 
 services:
+  # 0. BASE DE DATOS LOCAL
+  postgres-db:
+    image: postgres:15-alpine
+    container_name: postgres-db
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=admin
+    volumes:
+      - pg_data_local:/var/lib/postgresql/data
+      - ./init-dbs.sql:/docker-entrypoint-initdb.d/init-dbs.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: always
+
   # 1. EUREKA
   eureka-server:
     build: ./eureka-server
@@ -9,6 +28,13 @@ services:
       - "8761:8761"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8761/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    depends_on:
+      - postgres-db
 
   # 2. MICROSERVICIO DE MASCOTAS
   ms-gestion-mascotas:
@@ -18,8 +44,15 @@ services:
       - "8081:8081"
     environment:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - DB_URL=jdbc:postgresql://postgres-db:5432/db_mascotas
+      - DB_USERNAME=admin
+      - DB_PASSWORD=admin
+      - JAVA_OPTS=-Xms128m -Xmx256m
     depends_on:
-      - eureka-server
+      postgres-db:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
 
   # 3. API GATEWAY
   api-gateway:
@@ -29,10 +62,12 @@ services:
       - "8080:8080"
     environment:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - JAVA_OPTS=-Xms128m -Xmx256m
     depends_on:
-      - eureka-server
+      eureka-server:
+        condition: service_healthy
 
-  # 4. Geolocalización
+  # 4. MICROSERVICIO DE GEOLOCALIZACIÓN
   ms-geolocalizacion:
     build: ./ms-geolocalizacion
     container_name: ms-geolocalizacion
@@ -40,10 +75,17 @@ services:
       - "8083:8083"
     environment:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - DB_URL=jdbc:postgresql://postgres-db:5432/db_geolocalizacion
+      - DB_USERNAME=admin
+      - DB_PASSWORD=admin
+      - JAVA_OPTS=-Xms128m -Xmx256m
     depends_on:
-      - eureka-server
+      postgres-db:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
 
-  # 5. Coincidencias
+  # 5. MOTOR DE COINCIDENCIAS
   ms-motor-coincidencias:
     build: ./ms-motor-coincidencias
     container_name: ms-motor-coincidencias
@@ -51,10 +93,12 @@ services:
       - "8084:8084"
     environment:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - JAVA_OPTS=-Xms128m -Xmx256m
     depends_on:
-      - eureka-server
+      eureka-server:
+        condition: service_healthy
 
-  # 6. Usuarios
+  # 6. MICROSERVICIO DE USUARIOS
   ms-usuarios:
     build: ./usuarios
     container_name: ms-usuarios
@@ -62,8 +106,17 @@ services:
       - "8085:8085"
     environment:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - DB_URL=jdbc:postgresql://postgres-db:5432/db_usuarios
+      - DB_USERNAME=admin
+      - DB_PASSWORD=admin
+      - JAVA_OPTS=-Xms128m -Xmx256m
     depends_on:
-      - eureka-server
+      postgres-db:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+
+  # 6.1 MICROSERVICIO DE NOTIFICACIONES
   ms-notificaciones:
     build: ./notificaciones
     container_name: ms-notificaciones
@@ -71,8 +124,15 @@ services:
       - "8086:8086"
     environment:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - DB_URL=jdbc:postgresql://postgres-db:5432/db_notificaciones
+      - DB_USERNAME=admin
+      - DB_PASSWORD=admin
+      - JAVA_OPTS=-Xms128m -Xmx256m
     depends_on:
-      - eureka-server
+      postgres-db:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
 
   # 7. BFF
   ms-bff:
@@ -86,6 +146,17 @@ services:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
       - SERVICES_MASCOTAS_URL=http://ms-gestion-mascotas:8081
       - SERVICES_GEOLOCALIZACION_URL=http://ms-geolocalizacion:8083
+      - JAVA_OPTS=-Xms128m -Xmx256m
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      ms-gestion-mascotas:
+        condition: service_started
+      ms-geolocalizacion:
+        condition: service_started
+
+volumes:
+  pg_data_local:
       - SERVICES_COINCIDENCIAS_URL=http://ms-motor-coincidencias:8084
       - SERVICES_USUARIOS_URL=http://ms-usuarios:8085
       - SERVICES_NOTIFICACIONES_URL=http://ms-notificaciones:8086

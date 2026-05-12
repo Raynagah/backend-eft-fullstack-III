@@ -5,11 +5,11 @@ spring:
   application:
     name: ms-gestion-mascotas
 
-  # CONEXIÓN A LA BASE DE DATOS NEON
+  # CONEXIÓN PARAMETRIZADA A LA BASE DE DATOS DOCKER/AWS
   datasource:
-    url: jdbc:postgresql://ep-dawn-night-an2au2vx-pooler.c-6.us-east-1.aws.neon.tech/sanos_y_salvos_db?sslmode=require&channelBinding=require
-    username: neondb_owner
-    password: npg_nGytqPe5RDo6
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/db_mascotas}
+    username: ${DB_USERNAME:admin}
+    password: ${DB_PASSWORD:admin}
 
   # CONFIGURACIÓN DE JPA / HIBERNATE
   jpa:
@@ -24,7 +24,7 @@ spring:
 eureka:
   client:
     service-url:
-      defaultZone: http://localhost:8761/eureka/
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
 
 # CONFIGURACIÓN DE SWAGGER / OPENAPI
 springdoc:
@@ -32,8 +32,7 @@ springdoc:
   swagger-ui:
     use-root-path: true
     path: /swagger-ui.html
-    operations-sorter: alpha # Ordena los endpoints alfabéticamente
+    operations-sorter: alpha
     tags-sorter: alpha
   api-docs:
     path: /api/mascotas/v3/api-docs
-  
