@@ -4,6 +4,8 @@ import com.backend.ms_motor_coincidencias.client.MascotasClient;
 import com.backend.ms_motor_coincidencias.client.NotificacionesClient;
 import com.backend.ms_motor_coincidencias.dto.ResultadoMatchDTO;
 import com.backend.ms_motor_coincidencias.dto.external.NotificacionMatchDTO;
+import com.backend.ms_motor_coincidencias.model.Coincidencia;
+import com.backend.ms_motor_coincidencias.repository.CoincidenciaRepository;
 import com.backend.ms_motor_coincidencias.service.CoincidenciaService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -12,7 +14,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -25,9 +26,10 @@ public class CoincidenciaController {
     private final MascotasClient mascotasClient;
     private final CoincidenciaService coincidenciaService;
     private final NotificacionesClient notificacionesClient;
+    private final CoincidenciaRepository coincidenciaRepository; // <--- Repositorio inyectado aquí
 
     @Operation(summary = "Buscar coincidencias para un reporte", 
-               description = "Compara un reporte (perdida/encontrada) contra la base de datos y notifica automáticamente si hay match > 85%")
+               description = "Compara un reporte contra la base de datos, guarda el match y notifica si es > 85%")
     @ApiResponse(responseCode = "200", description = "Lista de coincidencias encontradas")
     @GetMapping("/buscar/{idReporte}")
     public ResponseEntity<List<ResultadoMatchDTO>> buscarMatches(@PathVariable Long idReporte) {
@@ -44,24 +46,28 @@ public class CoincidenciaController {
                 .filter(m -> !m.getReporteId().equals(idReporte))
                 .collect(Collectors.toList());
 
-        // 3. Cálculo de porcentajes
+        // 3. Cálculo de porcentajes (Llama a tu Service intacto)
         List<ResultadoMatchDTO> resultados = coincidenciaService.evaluarCoincidencias(mascotaOriginal, candidatas);
 
-        // 4. Mapeo dinámico a Notificaciones
+        // 4. Mapeo dinámico, GUARDADO en BD y preparación de alertas
         List<NotificacionMatchDTO> alertas = resultados.stream()
                 .filter(r -> r.getPorcentajeSimilitud() >= 85.0)
-                // Eliminamos el filtro de tipo si queremos que notifique a ambos,
-                // o nos aseguramos de que estamos notificando al dueño de la mascota PERDIDA
                 .map(r -> {
+                    // --- PERSISTENCIA EN BD: Guardamos el match histórico ---
+                    Coincidencia coincidencia = new Coincidencia();
+                    coincidencia.setReporteOriginalId(idReporte);
+                    coincidencia.setReporteEncontradoId(r.getReporteId());
+                    coincidencia.setPorcentajeSimilitud(r.getPorcentajeSimilitud());
+                    coincidencia.setEmailNotificado(r.getEmailContacto());
+                    coincidenciaRepository.save(coincidencia);
+                    // --------------------------------------------------------
+
                     NotificacionMatchDTO dto = new NotificacionMatchDTO();
-                    // USAMOS getReporteId() que es donde ResultadoMatchDTO guardó el "id" del JSON
                     dto.setReporteId(r.getReporteId());
                     dto.setPorcentajeSimilitud(r.getPorcentajeSimilitud());
                     dto.setFotografiaUrl(r.getFotografiaUrl());
                     dto.setTitulo("¡Posible coincidencia encontrada!");
                     dto.setMensaje("Hay un match del " + r.getPorcentajeSimilitud() + "% con un reporte.");
-
-                    // IMPORTANTE: El MS Notificaciones espera emailUsuario, asegúrate de enviarlo
                     dto.setEmailUsuario(r.getEmailContacto());
 
                     return dto;
@@ -72,7 +78,7 @@ public class CoincidenciaController {
         if (!alertas.isEmpty()) {
             try {
                 notificacionesClient.enviarNotificaciones(alertas);
-                System.out.println("Éxito: Se enviaron " + alertas.size() + " alertas.");
+                System.out.println("Éxito: Se enviaron e insertaron " + alertas.size() + " registros.");
             } catch (Exception e) {
                 System.err.println("Error de comunicación: " + e.getMessage());
             }
