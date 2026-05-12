@@ -49,4 +49,9 @@ public class GeoController {
         }
         return ResponseEntity.notFound().build();
     }
+    @GetMapping("/{reporteId}")
+    @Operation(summary = "Obtener ubicación por reporte")
+    public ResponseEntity<UbicacionAlerta> obtenerPorReporte(@PathVariable Long reporteId) {
+        return ResponseEntity.ok(geoService.obtenerPorReporteId(reporteId));
+    }
 }

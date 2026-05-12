@@ -157,3 +157,12 @@ services:
 
 volumes:
   pg_data_local:
+      - SERVICES_COINCIDENCIAS_URL=http://ms-motor-coincidencias:8084
+      - SERVICES_USUARIOS_URL=http://ms-usuarios:8085
+      - SERVICES_NOTIFICACIONES_URL=http://ms-notificaciones:8086
+    depends_on:
+      - eureka-server
+      - ms-gestion-mascotas
+      - ms-geolocalizacion
+      - ms-usuarios
+      - ms-motor-coincidencias

@@ -47,4 +47,7 @@ public class GeoService {
         double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
         return RADIO_TIERRA_KM * c;
     }
+    public UbicacionAlerta obtenerPorReporteId(Long reporteId) {
+        return repository.findByReporteId(reporteId).orElse(null);
+    }
 }
