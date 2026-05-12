@@ -93,8 +93,13 @@ services:
       - "8084:8084"
     environment:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - DB_URL=jdbc:postgresql://postgres-db:5432/db_coincidencias
+      - DB_USERNAME=admin
+      - DB_PASSWORD=admin
       - JAVA_OPTS=-Xms128m -Xmx256m
     depends_on:
+      postgres-db:
+        condition: service_healthy
       eureka-server:
         condition: service_healthy
 
@@ -110,6 +115,7 @@ services:
       - DB_USERNAME=admin
       - DB_PASSWORD=admin
       - JAVA_OPTS=-Xms128m -Xmx256m
+      - JWT_SECRET=MiClaveSuperSecretaParaMascotas123456789!
     depends_on:
       postgres-db:
         condition: service_healthy

@@ -3,6 +3,7 @@ package com.backend.bff.service;
 import com.backend.bff.client.UsuarioClient;
 import com.backend.bff.dto.LoginRequest;
 import com.backend.bff.dto.LoginResponse;
+import com.backend.bff.dto.UsuarioDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -25,5 +26,9 @@ public class AuthService {
 
     public void cerrarSesion(String sessionId) {
         usuarioClient.logout(sessionId);
+    }
+
+    public UsuarioDTO registrar(UsuarioDTO request) {
+        return usuarioClient.registrar(request);
     }
 }

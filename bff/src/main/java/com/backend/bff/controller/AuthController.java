@@ -2,6 +2,7 @@ package com.backend.bff.controller;
 
 import com.backend.bff.dto.LoginRequest;
 import com.backend.bff.dto.LoginResponse;
+import com.backend.bff.dto.UsuarioDTO;
 import com.backend.bff.service.AuthService;
 import feign.FeignException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +28,11 @@ public class AuthController {
             // extraemos su mensaje original y se lo pasamos al frontend
             return ResponseEntity.status(e.status()).body(e.contentUTF8());
         }
+    }
+
+    @PostMapping("/registro")
+    public ResponseEntity<UsuarioDTO> registro(@RequestBody UsuarioDTO request) {
+        return ResponseEntity.ok(authService.registrar(request));
     }
 
     @PostMapping("/logout")
