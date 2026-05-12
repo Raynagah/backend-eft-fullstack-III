@@ -40,7 +40,7 @@ public class SessionAuthFilter extends OncePerRequestFilter {
         String token = authHeader.substring(7);
 
         try {
-            // 1. Extraemos los datos REALES del token
+            // 1. Extraemos los datos reales del token
             Long userId = jwtService.extractUserId(token);
             String correo = jwtService.extractCorreo(token);
 

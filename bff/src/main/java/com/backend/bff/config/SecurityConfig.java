@@ -34,12 +34,23 @@ public class SecurityConfig {
                         // 1. FUNDAMENTAL: Permitir peticiones OPTIONS (CORS preflight) para que Vue no reciba 403
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                        // 2. Rutas públicas
+                        // 2. RUTAS DE SWAGGER / OPENAPI (Con el prefijo exacto en lugar del comodín doble)
+                        .requestMatchers(
+                                "/v3/api-docs/**",
+                                "/api/v1/web/v3/api-docs/**",
+                                "/swagger-ui/**",
+                                "/api/v1/web/swagger-ui/**",
+                                "/swagger-ui.html",
+                                "/swagger-resources/**",
+                                "/webjars/**"
+                        ).permitAll()
+
+                        // 3. Rutas públicas del negocio
                         .requestMatchers("/api/v1/auth/login").permitAll()
                         .requestMatchers("/api/v1/auth/logout").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/web/mascotas/**").permitAll()
 
-                        // 3. Rutas protegidas
+                        // 4. Rutas protegidas
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(sessionAuthFilter, UsernamePasswordAuthenticationFilter.class);
