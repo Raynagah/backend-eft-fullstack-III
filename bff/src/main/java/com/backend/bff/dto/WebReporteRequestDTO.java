@@ -4,12 +4,13 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
-
 @Data
 public class WebReporteRequestDTO {
 
     @NotNull(message = "El ID de usuario es obligatorio")
     private Long usuarioId;
+
+    private String nombre;
 
     @NotBlank(message = "El tipo de reporte (PERDIDA/ENCONTRADA) es obligatorio")
     private String tipoReporte;

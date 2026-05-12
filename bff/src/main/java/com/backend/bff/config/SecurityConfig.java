@@ -27,36 +27,36 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                // 1. Habilitamos CORS directamente en Spring Security
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                // 2. Desactivamos CSRF porque usaremos tokens (JWT)
                 .csrf(csrf -> csrf.disable())
-                // 3. Desactivamos el manejo de sesiones clásico de Spring (JSESSIONID)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                // 4. Configuramos las reglas de las rutas
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/v1/auth/login").permitAll() // Público
+                        // 1. FUNDAMENTAL: Permitir peticiones OPTIONS (CORS preflight) para que Vue no reciba 403
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
+                        // 2. Rutas públicas
+                        .requestMatchers("/api/v1/auth/login").permitAll()
                         .requestMatchers("/api/v1/auth/logout").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/web/mascotas/**").permitAll()
-                        .anyRequest().authenticated() // Todoo lo demás requiere pasar por el filtro
+
+                        // 3. Rutas protegidas
+                        .anyRequest().authenticated()
                 )
-                // 5. Añadimos nuestro filtro personalizado ANTES del filtro estándar de autenticación
                 .addFilterBefore(sessionAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
-    // Bean encargado de definir las reglas CORS para Spring Security
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:5173")); // El frontend Vue
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedOrigins(List.of("http://localhost:5173"));
+        // Se agregó PATCH y se asegura de que OPTIONS esté permitido
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        // Aplicamos estas reglas a todas las rutas
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }

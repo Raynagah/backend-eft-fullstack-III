@@ -52,7 +52,7 @@ public class MascotaService {
         });
     }
 
-    // --- NUEVO MÉTODO: Eliminar Reporte ---
+    // --- NUEVO MÉTODOo: Eliminar Reporte ---
     @Transactional
     public void eliminarReporte(Long id) {
         ReporteMascota reporte = mascotaRepository.findById(id)

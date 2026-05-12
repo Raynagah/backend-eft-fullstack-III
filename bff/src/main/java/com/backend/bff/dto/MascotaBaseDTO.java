@@ -10,6 +10,7 @@ public class MascotaBaseDTO {
     private String sagaStatus;
 
     // Datos físicos y del reporte
+    private String nombre;
     private String tipoReporte;
     private String especie;
     private String raza;

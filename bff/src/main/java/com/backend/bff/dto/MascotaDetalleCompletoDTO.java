@@ -15,6 +15,7 @@ public class MascotaDetalleCompletoDTO {
 
     // --- Datos de ms-mascotas (Alineados con el JSON real) ---
     private Long id;
+    private String nombre;
     private String tipoReporte; // Ej: "PERDIDA" o "ENCONTRADA"
     private String especie;
     private String raza;

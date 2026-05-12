@@ -13,6 +13,7 @@ public class ReporteFactory {
         // Preparamos el builder con los datos comunes del DTO
         ReporteMascota.ReporteMascotaBuilder builder = ReporteMascota.builder()
                 .usuarioId(dto.usuarioId())
+                .nombre(dto.nombre())
                 .especie(dto.especie())
                 .raza(dto.raza())
                 .color(dto.color())

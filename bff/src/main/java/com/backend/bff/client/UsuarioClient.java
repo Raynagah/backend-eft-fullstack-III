@@ -2,6 +2,7 @@ package com.backend.bff.client;
 
 import com.backend.bff.dto.LoginRequest;
 import com.backend.bff.dto.LoginResponse;
+import com.backend.bff.dto.UsuarioActualizacionDTO;
 import com.backend.bff.dto.UsuarioDTO;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
@@ -20,4 +21,7 @@ public interface UsuarioClient {
 
     @PostMapping("/api/usuarios/logout")
     String logout(@RequestParam("sessionId") String sessionId);
+
+    @PutMapping("/api/usuarios/{id}")
+    UsuarioDTO actualizarUsuario(@PathVariable("id") Long id, @RequestBody UsuarioActualizacionDTO dto);
 }

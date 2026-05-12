@@ -23,12 +23,17 @@ public class ReporteMascota {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    //Agregué este campo acá porque mi intención es que los usuarios que ingresan un reporte de mascota perdida deberían saber el nombre de su mascota y si esta
+    //tiene chip o algo que la identifique al momento de ser encontrada se le haga más fácil buscar dentro de todos los reportes. Ojalá funcione xd
+    @Column(name = "nombre_mascota")
+    private String nombre;
+
     // Actualizado para coincidir con el DTO y ser obligatorio
     @Column(name = "usuario_id", nullable = false)
     @NotNull(message = "El ID de usuario es obligatorio")
     private Long usuarioId;
 
-    // NUEVO: Campo para el Patrón Saga (Requisito Bloque 3)
+    //Campo para el Patrón Saga (Requisito Bloque 3)
     @Column(name = "saga_status", nullable = false)
     private String sagaStatus;
 

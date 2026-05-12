@@ -68,7 +68,12 @@ public class UsuarioService {
                 usuario.getId(),
                 usuario.getNombre(),
                 usuario.getTelefono(),
-                usuario.getCorreo()
+                usuario.getCorreo(),
+                usuario.getEdad(),
+                usuario.getGenero(),
+                usuario.getDireccion(),
+                usuario.getOcupacion(),
+                usuario.getFotoUrl()
         );
 
         return LoginResponseDTO.builder()
