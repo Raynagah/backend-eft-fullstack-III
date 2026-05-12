@@ -134,7 +134,7 @@ services:
       eureka-server:
         condition: service_healthy
 
-  # 7. BFF
+ # 7. BFF
   ms-bff:
     build: ./bff
     container_name: ms-bff
@@ -146,17 +146,6 @@ services:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
       - SERVICES_MASCOTAS_URL=http://ms-gestion-mascotas:8081
       - SERVICES_GEOLOCALIZACION_URL=http://ms-geolocalizacion:8083
-      - JAVA_OPTS=-Xms128m -Xmx256m
-    depends_on:
-      eureka-server:
-        condition: service_healthy
-      ms-gestion-mascotas:
-        condition: service_started
-      ms-geolocalizacion:
-        condition: service_started
-
-volumes:
-  pg_data_local:
       - SERVICES_COINCIDENCIAS_URL=http://ms-motor-coincidencias:8084
       - SERVICES_USUARIOS_URL=http://ms-usuarios:8085
       - SERVICES_NOTIFICACIONES_URL=http://ms-notificaciones:8086
@@ -166,3 +155,6 @@ volumes:
       - ms-geolocalizacion
       - ms-usuarios
       - ms-motor-coincidencias
+
+volumes:
+  pg_data_local:
