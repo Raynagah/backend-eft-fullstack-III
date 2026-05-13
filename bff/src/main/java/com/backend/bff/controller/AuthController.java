@@ -31,8 +31,21 @@ public class AuthController {
     }
 
     @PostMapping("/registro")
-    public ResponseEntity<UsuarioDTO> registro(@RequestBody UsuarioDTO request) {
-        return ResponseEntity.ok(authService.registrar(request));
+    public ResponseEntity<?> registro(@RequestBody UsuarioDTO request) {
+        try {
+            // El BFF reenvía el usuario (con la contraseña intacta) al MS
+            UsuarioDTO nuevoUsuario = authService.registrar(request);
+
+            // ¡MEDIDA DE SEGURIDAD!
+            // Borramos la contraseña del objeto antes de enviarlo al frontend
+            if (nuevoUsuario != null) {
+                nuevoUsuario.setPassword(null);
+            }
+
+            return ResponseEntity.ok(nuevoUsuario);
+        } catch (FeignException e) {
+            return ResponseEntity.status(e.status()).body(e.contentUTF8());
+        }
     }
 
     @PostMapping("/logout")

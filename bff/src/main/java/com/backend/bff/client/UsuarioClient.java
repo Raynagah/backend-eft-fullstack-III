@@ -25,6 +25,6 @@ public interface UsuarioClient {
     @PutMapping("/api/usuarios/{id}")
     UsuarioDTO actualizarUsuario(@PathVariable("id") Long id, @RequestBody UsuarioActualizacionDTO dto);
 
-    @PostMapping("/api/usuarios/registro")
+    @PostMapping("/api/usuarios")
     UsuarioDTO registrar(@RequestBody UsuarioDTO dto);
 }

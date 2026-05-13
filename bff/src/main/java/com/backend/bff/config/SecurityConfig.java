@@ -50,6 +50,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/auth/registro").permitAll()
                         .requestMatchers("/api/v1/auth/logout").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/web/mascotas/**").permitAll()
+                        .requestMatchers("/api/v1/web/usuarios/registro").permitAll()
 
                         // 4. Rutas protegidas
                         .anyRequest().authenticated()

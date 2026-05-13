@@ -9,9 +9,11 @@ public class UsuarioDTO {
     private String nombre;
     private String telefono;
 
-    // Usamos esta anotación para que Java entienda que en el JSON viene como 'correo'
-    @JsonProperty("correo")
+    @JsonProperty("correo") // Mapea 'correo' del JSON a 'email' en Java
     private String email;
+
+    // Permite recibir la contraseña (escritura) pero no enviarla (lectura)
+    private String password;
 
     private Integer edad;
     private String genero;

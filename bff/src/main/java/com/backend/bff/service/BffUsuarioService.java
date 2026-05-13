@@ -40,4 +40,8 @@ public class BffUsuarioService {
                         .build())
                 .collect(Collectors.toList());
     }
+
+    public UsuarioDTO registrar(UsuarioDTO request) {
+        return usuarioClient.registrar(request);
+    }
 }

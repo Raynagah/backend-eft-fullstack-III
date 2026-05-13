@@ -29,6 +29,7 @@ public class AuthService {
     }
 
     public UsuarioDTO registrar(UsuarioDTO request) {
+        // Simplemente delegamos la creación al microservicio de usuarios
         return usuarioClient.registrar(request);
     }
 }
