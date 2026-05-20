@@ -46,27 +46,35 @@ class BffUsuarioServiceTest {
 
     @Test
     void obtenerReportesPorUsuario_DebeFiltrarCorrectamente() {
-        // Usamos MascotaBaseDTO tal como lo devuelve tu MascotasClient
+        // Mascota 1: Coincide con el usuario buscado
         MascotaBaseDTO m1 = new MascotaBaseDTO();
         m1.setId(100L);
-        m1.setUsuarioId(1L); // Este es el que buscamos
+        m1.setUsuarioId(1L);
         m1.setTipoReporte("PERDIDA");
         m1.setEspecie("Perro");
         m1.setRaza("Pug");
 
+        // Mascota 2: Pertenece a otro usuario (no coincide)
         MascotaBaseDTO m2 = new MascotaBaseDTO();
         m2.setId(101L);
-        m2.setUsuarioId(2L); // Este debe filtrarse y no aparecer
+        m2.setUsuarioId(2L);
         m2.setTipoReporte("ENCONTRADA");
         m2.setEspecie("Gato");
         m2.setRaza("Siamés");
 
-        when(mascotaClient.obtenerTodas()).thenReturn(List.of(m1, m2));
+        // Mascota 3: Caso extremo con usuarioId NULL para cerrar todas las ramas de la lambda
+        MascotaBaseDTO m3 = new MascotaBaseDTO();
+        m3.setId(102L);
+        m3.setUsuarioId(null);
+        m3.setTipoReporte("PERDIDA");
+        m3.setEspecie("Loro");
+
+        when(mascotaClient.obtenerTodas()).thenReturn(List.of(m1, m2, m3));
 
         // Ejecutamos la búsqueda para el usuario 1L
         List<MascotaCardDTO> resultados = service.obtenerReportesPorUsuario(1L);
 
-        // Verificamos que el filtro mágico funcionó
+        // Verificamos que solo se seleccionó al m1
         assertEquals(1, resultados.size());
         assertEquals(100L, resultados.get(0).getId());
     }
