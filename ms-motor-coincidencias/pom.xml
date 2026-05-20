@@ -113,6 +113,44 @@
 					</excludes>
 				</configuration>
 			</plugin>
+			<plugin>
+				<groupId>org.jacoco</groupId>
+				<artifactId>jacoco-maven-plugin</artifactId>
+				<version>0.8.11</version> <configuration>
+				<excludes>
+					<exclude>com/backend/ms_motor_coincidencias/MsMotorCoincidenciasApplication.class</exclude>
+					<exclude>com/backend/ms_motor_coincidencias/client/**/*.class</exclude>
+					<exclude>com/backend/ms_motor_coincidencias/config/**/*.class</exclude>
+					<exclude>com/backend/ms_motor_coincidencias/dto/**/*.class</exclude>
+					<exclude>com/backend/ms_motor_coincidencias/model/**/*.class</exclude>
+					<exclude>com/backend/ms_motor_coincidencias/repository/**/*.class</exclude>
+				</excludes>
+			</configuration>
+				<executions>
+					<execution>
+						<goals>
+							<goal>prepare-agent</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>report</id>
+						<phase>test</phase>
+						<goals>
+							<goal>report</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<configuration>
+					<excludes>
+						<exclude>**/MsMotorCoincidenciasApplicationTests.java</exclude>
+					</excludes>
+				</configuration>
+			</plugin>
 		</plugins>
 	</build>
 
