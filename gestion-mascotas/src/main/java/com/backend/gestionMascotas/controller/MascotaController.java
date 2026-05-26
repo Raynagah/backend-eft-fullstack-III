@@ -1,12 +1,13 @@
 package com.backend.gestionMascotas.controller;
 
 import java.util.List;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import com.backend.gestionMascotas.dto.ReporteRequestDTO;
-import com.backend.gestionMascotas.model.ReporteMascota;
+import com.backend.gestionMascotas.dto.ReporteResponseDTO; // Importamos solo los DTOs
 import com.backend.gestionMascotas.service.MascotaService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -26,8 +27,8 @@ public class MascotaController {
 
     @Operation(summary = "Registrar un nuevo reporte (Inicio de Saga)")
     @PostMapping
-    public ResponseEntity<ReporteMascota> crearReporte(@Valid @RequestBody ReporteRequestDTO dto) {
-        ReporteMascota nuevoReporte = mascotaService.registrarReporte(dto);
+    public ResponseEntity<ReporteResponseDTO> crearReporte(@Valid @RequestBody ReporteRequestDTO dto) {
+        ReporteResponseDTO nuevoReporte = mascotaService.registrarReporte(dto);
         return new ResponseEntity<>(nuevoReporte, HttpStatus.CREATED);
     }
 
@@ -51,19 +52,19 @@ public class MascotaController {
 
     @Operation(summary = "Obtener todos los reportes")
     @GetMapping
-    public ResponseEntity<List<ReporteMascota>> obtenerTodos() {
+    public ResponseEntity<List<ReporteResponseDTO>> obtenerTodos() {
         return ResponseEntity.ok(mascotaService.obtenerTodosLosReportes());
     }
 
     @Operation(summary = "Filtrar por tipo")
     @GetMapping("/tipo/{tipoReporte}")
-    public ResponseEntity<List<ReporteMascota>> obtenerPorTipo(@PathVariable String tipoReporte) {
+    public ResponseEntity<List<ReporteResponseDTO>> obtenerPorTipo(@PathVariable String tipoReporte) {
         return ResponseEntity.ok(mascotaService.obtenerReportesPorTipo(tipoReporte));
     }
 
     @Operation(summary = "Obtener mascota por ID")
     @GetMapping("/{id}")
-    public ResponseEntity<ReporteMascota> obtenerPorId(@PathVariable Long id) {
+    public ResponseEntity<ReporteResponseDTO> obtenerPorId(@PathVariable Long id) {
         return ResponseEntity.ok(mascotaService.obtenerReportePorId(id));
     }
 }

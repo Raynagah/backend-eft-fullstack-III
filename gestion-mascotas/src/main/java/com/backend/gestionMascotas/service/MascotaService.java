@@ -3,9 +3,11 @@ package com.backend.gestionMascotas.service;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors; // <-- Agregamos esta importación
 
+import com.backend.gestionMascotas.dto.ReporteResponseDTO;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional; // Importante para DB
+import org.springframework.transaction.annotation.Transactional;
 
 import com.backend.gestionMascotas.client.GeolocalizacionClient;
 import com.backend.gestionMascotas.dto.ReporteRequestDTO;
@@ -23,7 +25,8 @@ public class MascotaService {
     private final ReporteFactory reporteFactory;
     private final GeolocalizacionClient geoClient;
 
-    public ReporteMascota registrarReporte(ReporteRequestDTO dto) {
+    // ✅ AHORA DEVUELVE DTO
+    public ReporteResponseDTO registrarReporte(ReporteRequestDTO dto) {
         ReporteMascota nuevoReporte = reporteFactory.crearReporte(dto);
         nuevoReporte = mascotaRepository.save(nuevoReporte);
 
@@ -42,7 +45,7 @@ public class MascotaService {
             this.compensarReporte(nuevoReporte.getId());
         }
 
-        return nuevoReporte;
+        return convertirADTO(nuevoReporte); // <-- Usamos el conversor aquí
     }
 
     public void compensarReporte(Long id) {
@@ -52,34 +55,60 @@ public class MascotaService {
         });
     }
 
-    // --- NUEVO MÉTODOo: Eliminar Reporte ---
     @Transactional
     public void eliminarReporte(Long id) {
         ReporteMascota reporte = mascotaRepository.findById(id)
                 .orElseThrow(() -> new ReporteNotFoundException(id));
 
-        // 1. Intentar eliminar en el microservicio de Geolocalización (limpieza)
         try {
             geoClient.eliminarUbicacion(id);
-            // Nota: Asegúrate que tu Feign Client 'GeolocalizacionClient' tenga el método @DeleteMapping("/{id}")
         } catch (Exception e) {
-            System.err.println("No se pudo eliminar la geolocalización, puede que no existiera: " + e.getMessage());
+            System.err.println("No se pudo eliminar la geolocalización: " + e.getMessage());
         }
 
-        // 2. Eliminar en local
         mascotaRepository.delete(reporte);
     }
 
-    public List<ReporteMascota> obtenerTodosLosReportes() {
-        return mascotaRepository.findAll();
+    // ✅ AHORA DEVUELVE LISTA DE DTOs
+    public List<ReporteResponseDTO> obtenerTodosLosReportes() {
+        return mascotaRepository.findAll()
+                .stream()
+                .map(this::convertirADTO) // <-- Convierte cada entidad de la lista a DTO
+                .collect(Collectors.toList());
     }
 
-    public List<ReporteMascota> obtenerReportesPorTipo(String tipoReporte) {
-        return mascotaRepository.findByTipoReporte(tipoReporte);
+    // ✅ AHORA DEVUELVE LISTA DE DTOs
+    public List<ReporteResponseDTO> obtenerReportesPorTipo(String tipoReporte) {
+        return mascotaRepository.findByTipoReporte(tipoReporte)
+                .stream()
+                .map(this::convertirADTO) // <-- Convierte cada entidad de la lista a DTO
+                .collect(Collectors.toList());
     }
 
-    public ReporteMascota obtenerReportePorId(Long id) {
-        return mascotaRepository.findById(id)
+    // ✅ AHORA DEVUELVE DTO
+    public ReporteResponseDTO obtenerReportePorId(Long id) {
+        ReporteMascota entidad = mascotaRepository.findById(id)
                 .orElseThrow(() -> new ReporteNotFoundException(id));
+        return convertirADTO(entidad); // <-- Convertimos antes de retornar
+    }
+
+    // Métodoo utilitario para convertir Entidad a DTO
+    private ReporteResponseDTO convertirADTO(ReporteMascota entidad) {
+        return new ReporteResponseDTO(
+                entidad.getId(),
+                entidad.getTipoReporte(),
+                entidad.getNombre(),
+                entidad.getEspecie(),
+                entidad.getRaza(),
+                entidad.getColor(),
+                entidad.getTamano(),
+                entidad.getNombreContacto(),
+                entidad.getTelefonoContacto(),
+                entidad.getFotografiaUrl(),
+                entidad.getLatitud(),
+                entidad.getLongitud(),
+                entidad.getFechaReporte(),
+                entidad.getSagaStatus()
+        );
     }
 }
