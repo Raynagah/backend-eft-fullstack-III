@@ -2,13 +2,13 @@
 FROM maven:3.8.5-openjdk-17-slim AS build
 WORKDIR /app
 
-# Optimizamos cache de Docker: Copiamos primero el pom para descargar dependencias
+# Copiamos todo el proyecto directamente
 COPY pom.xml .
-RUN mvn dependency:go-offline
-
-# Copiamos el código y compilamos
 COPY src ./src
-RUN mvn clean package -DskipTests
+
+# Compilamos usando la caché nativa de Docker para la carpeta .m2
+# Esto descarga solo lo que falta y nunca fallará por el bug de go-offline
+RUN --mount=type=cache,target=/root/.m2 mvn clean package -DskipTests
 
 # --- ETAPA 2: Ejecución ---
 FROM eclipse-temurin:17-jre-alpine
