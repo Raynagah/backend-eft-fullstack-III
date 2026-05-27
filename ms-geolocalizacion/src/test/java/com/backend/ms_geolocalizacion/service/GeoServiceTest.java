@@ -1,20 +1,30 @@
 package com.backend.ms_geolocalizacion.service;
 
-import com.backend.ms_geolocalizacion.model.UbicacionAlerta;
-import com.backend.ms_geolocalizacion.repository.UbicacionAlertaRepository;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import com.backend.ms_geolocalizacion.exception.BadRequestException;
+import com.backend.ms_geolocalizacion.exception.ResourceNotFoundException;
+import com.backend.ms_geolocalizacion.model.UbicacionAlerta;
+import com.backend.ms_geolocalizacion.repository.UbicacionAlertaRepository;
 
 @ExtendWith(MockitoExtension.class)
 class GeoServiceTest {
@@ -28,11 +38,12 @@ class GeoServiceTest {
     private UbicacionAlerta ubicacion;
 
     @BeforeEach
+    @SuppressWarnings("unused") // Suprime el warning de "setUp is never used"
     void setUp() {
         ubicacion = new UbicacionAlerta();
         ubicacion.setId(1L);
         ubicacion.setReporteId(100L);
-        ubicacion.setLatitud(-33.4489); // Coordenadas de ejemplo
+        ubicacion.setLatitud(-33.4489); // Santiago, Chile
         ubicacion.setLongitud(-70.6693);
     }
 
@@ -48,6 +59,33 @@ class GeoServiceTest {
     }
 
     @Test
+    void registrarUbicacion_CuandoReporteIdEsNull_DebeLanzarBadRequestException() {
+        ubicacion.setReporteId(null);
+
+        // Se guarda en una variable para quitar el warning y se valida el mensaje
+        BadRequestException exception = assertThrows(
+                BadRequestException.class, 
+                () -> geoService.registrarUbicacion(ubicacion)
+        );
+        
+        assertEquals("El ID de reporte es obligatorio.", exception.getMessage());
+        verify(repository, never()).save(any());
+    }
+
+    @Test
+    void registrarUbicacion_CuandoLatitudInvalida_DebeLanzarBadRequestException() {
+        ubicacion.setLatitud(95.0); // Fuera del rango de -90 a 90
+
+        BadRequestException exception = assertThrows(
+                BadRequestException.class, 
+                () -> geoService.registrarUbicacion(ubicacion)
+        );
+        
+        assertEquals("La latitud debe ser un valor numérico válido entre -90.0 y 90.0.", exception.getMessage());
+        verify(repository, never()).save(any());
+    }
+
+    @Test
     void obtenerTodas_DebeRetornarListaDeUbicaciones() {
         when(repository.findAll()).thenReturn(List.of(ubicacion));
 
@@ -59,44 +97,52 @@ class GeoServiceTest {
 
     @Test
     void buscarCercanas_DebeFiltrarPorRadioCorrectamente() {
-        // PREPARACIÓN: Creamos dos puntos. Uno muy cerca y otro muy lejos.
         UbicacionAlerta cercana = new UbicacionAlerta();
-        cercana.setLatitud(0.01); // Muy cerca del punto 0.0
+        cercana.setLatitud(0.01); 
         cercana.setLongitud(0.01);
 
         UbicacionAlerta lejana = new UbicacionAlerta();
-        lejana.setLatitud(5.0); // A cientos de kilómetros del punto 0.0
+        lejana.setLatitud(5.0); 
         lejana.setLongitud(5.0);
 
         when(repository.findAll()).thenReturn(List.of(cercana, lejana));
 
-        // ACCIÓN: Buscamos en el punto 0.0 con un radio de 50 kilómetros
         List<UbicacionAlerta> resultados = geoService.buscarCercanas(0.0, 0.0, 50.0);
 
-        // VERIFICACIÓN: La fórmula de Haversine debe incluir a la 'cercana' y descartar a la 'lejana'
         assertEquals(1, resultados.size());
         assertEquals(0.01, resultados.get(0).getLatitud());
     }
 
     @Test
-    void eliminarUbicacion_CuandoExiste_DebeRetornarTrue() {
-        when(repository.existsById(1L)).thenReturn(true);
-        doNothing().when(repository).deleteById(1L);
-
-        boolean resultado = geoService.eliminarUbicacion(1L);
-
-        assertTrue(resultado);
-        verify(repository, times(1)).deleteById(1L);
+    void buscarCercanas_CuandoRadioEsInvalido_DebeLanzarBadRequestException() {
+        BadRequestException exception = assertThrows(
+                BadRequestException.class, 
+                () -> geoService.buscarCercanas(0.0, 0.0, -10.0)
+        );
+        
+        assertEquals("El radio de búsqueda debe ser mayor a 0 KM.", exception.getMessage());
     }
 
     @Test
-    void eliminarUbicacion_CuandoNoExiste_DebeRetornarFalse() {
-        when(repository.existsById(2L)).thenReturn(false);
+    void eliminarUbicacion_CuandoExiste_DebeEliminarSinErrores() {
+        when(repository.findById(1L)).thenReturn(Optional.of(ubicacion));
+        doNothing().when(repository).delete(ubicacion);
 
-        boolean resultado = geoService.eliminarUbicacion(2L);
+        assertDoesNotThrow(() -> geoService.eliminarUbicacion(1L));
+        verify(repository, times(1)).delete(ubicacion);
+    }
 
-        assertFalse(resultado);
-        verify(repository, never()).deleteById(anyLong()); // Nunca debe llamar al delete
+    @Test
+    void eliminarUbicacion_CuandoNoExiste_DebeLanzarResourceNotFoundException() {
+        when(repository.findById(2L)).thenReturn(Optional.empty());
+
+        ResourceNotFoundException exception = assertThrows(
+                ResourceNotFoundException.class, 
+                () -> geoService.eliminarUbicacion(2L)
+        );
+        
+        assertEquals("No se encontró ninguna ubicación con el ID: 2", exception.getMessage());
+        verify(repository, never()).delete(any());
     }
 
     @Test
@@ -110,11 +156,105 @@ class GeoServiceTest {
     }
 
     @Test
-    void obtenerPorReporteId_CuandoNoExiste_DebeRetornarNull() {
+    void obtenerPorReporteId_CuandoNoExiste_DebeLanzarResourceNotFoundException() {
         when(repository.findByReporteId(999L)).thenReturn(Optional.empty());
 
-        UbicacionAlerta resultado = geoService.obtenerPorReporteId(999L);
+        ResourceNotFoundException exception = assertThrows(
+                ResourceNotFoundException.class, 
+                () -> geoService.obtenerPorReporteId(999L)
+        );
+        
+        assertEquals("No se encontró ninguna ubicación asociada al reporte con ID: 999", exception.getMessage());
+    }
 
-        assertNull(resultado);
+    @Test
+    void registrarUbicacion_CuandoLatitudEsNull_DebeLanzarBadRequestException() {
+        ubicacion.setLatitud(null);
+        
+        BadRequestException exception = assertThrows(
+                BadRequestException.class, 
+                () -> geoService.registrarUbicacion(ubicacion)
+        );
+        
+        assertNotNull(exception); // Evita el warning del IDE
+        verify(repository, never()).save(any());
+    }
+
+    @Test
+    void registrarUbicacion_CuandoLatitudMenorAMenos90_DebeLanzarBadRequestException() {
+        ubicacion.setLatitud(-91.0);
+        
+        BadRequestException exception = assertThrows(
+                BadRequestException.class, 
+                () -> geoService.registrarUbicacion(ubicacion)
+        );
+        
+        assertNotNull(exception);
+        verify(repository, never()).save(any());
+    }
+
+    @Test
+    void registrarUbicacion_CuandoLongitudEsNull_DebeLanzarBadRequestException() {
+        ubicacion.setLongitud(null);
+        
+        BadRequestException exception = assertThrows(
+                BadRequestException.class, 
+                () -> geoService.registrarUbicacion(ubicacion)
+        );
+        
+        assertNotNull(exception);
+        verify(repository, never()).save(any());
+    }
+
+    @Test
+    void registrarUbicacion_CuandoLongitudMenorAMenos180_DebeLanzarBadRequestException() {
+        ubicacion.setLongitud(-181.0);
+        
+        BadRequestException exception = assertThrows(
+                BadRequestException.class, 
+                () -> geoService.registrarUbicacion(ubicacion)
+        );
+        
+        assertNotNull(exception);
+        verify(repository, never()).save(any());
+    }
+
+    @Test
+    void registrarUbicacion_CuandoLongitudMayorA180_DebeLanzarBadRequestException() {
+        ubicacion.setLongitud(181.0);
+        
+        BadRequestException exception = assertThrows(
+                BadRequestException.class, 
+                () -> geoService.registrarUbicacion(ubicacion)
+        );
+        
+        assertNotNull(exception);
+        verify(repository, never()).save(any());
+    }
+
+    @Test
+    void buscarCercanas_CuandoRadioEsCero_DebeLanzarBadRequestException() {
+        BadRequestException exception = assertThrows(
+                BadRequestException.class, 
+                () -> geoService.buscarCercanas(-33.0, -70.0, 0.0)
+        );
+        
+        assertNotNull(exception);
+    }
+
+    @Test
+    void buscarCercanas_CuandoLatitudOlongitudInvalida_DebeLanzarBadRequestException() {
+        BadRequestException exceptionLat = assertThrows(
+                BadRequestException.class, 
+                () -> geoService.buscarCercanas(null, -70.0, 50.0)
+        );
+        
+        BadRequestException exceptionLon = assertThrows(
+                BadRequestException.class, 
+                () -> geoService.buscarCercanas(-33.0, null, 50.0)
+        );
+        
+        assertNotNull(exceptionLat);
+        assertNotNull(exceptionLon);
     }
 }
