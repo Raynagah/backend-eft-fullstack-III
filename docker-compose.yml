@@ -162,5 +162,169 @@ services:
       - ms-usuarios
       - ms-motor-coincidencias
 
+# ========================================================
+  # SECCIÓN DE PRUEBAS Y REPORTES (JACOCO) - SOLO CON TEST
+  # ========================================================
+
+  ms-usuarios-test:
+    image: maven:3.8.5-openjdk-17-slim
+    container_name: ms-usuarios-test
+    profiles:
+      - test-suite
+    volumes:
+      - ./usuarios:/app
+      - maven_cache:/root/.m2
+    working_dir: /app
+    command: mvn clean test
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - DB_URL=jdbc:postgresql://postgres-db:5432/db_usuarios
+      - DB_USERNAME=admin
+      - DB_PASSWORD=admin
+      - JWT_SECRET=MiClaveSuperSecretaParaMascotas123456789!
+    depends_on:
+      postgres-db:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: '1.5'
+          memory: 768M
+
+  ms-gestion-mascotas-test:
+    image: maven:3.8.5-openjdk-17-slim
+    container_name: ms-gestion-mascotas-test
+    profiles:
+      - test-suite
+    volumes:
+      - ./gestion-mascotas:/app  
+      - maven_cache:/root/.m2
+    working_dir: /app
+    command: mvn clean test
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - DB_URL=jdbc:postgresql://postgres-db:5432/db_mascotas
+      - DB_USERNAME=admin
+      - DB_PASSWORD=admin
+    depends_on:
+      postgres-db:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: '1.5'
+          memory: 768M
+
+  ms-motor-coincidencias-test:
+    image: maven:3.8.5-openjdk-17-slim
+    container_name: ms-motor-coincidencias-test
+    profiles:
+      - test-suite
+    volumes:
+      - ./ms-motor-coincidencias:/app
+      - maven_cache:/root/.m2
+    working_dir: /app
+    command: mvn clean test
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - DB_URL=jdbc:postgresql://postgres-db:5432/db_coincidencias
+      - DB_USERNAME=admin
+      - DB_PASSWORD=admin
+    depends_on:
+      postgres-db:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: '1.5'
+          memory: 768M
+
+  ms-geolocalizacion-test:
+    image: maven:3.8.5-openjdk-17-slim
+    container_name: ms-geolocalizacion-test
+    profiles:
+      - test-suite
+    volumes:
+      - ./ms-geolocalizacion:/app
+      - maven_cache:/root/.m2
+    working_dir: /app
+    command: mvn clean test
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - DB_URL=jdbc:postgresql://postgres-db:5432/db_geolocalizacion
+      - DB_USERNAME=admin
+      - DB_PASSWORD=admin
+    depends_on:
+      postgres-db:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: '1.5'
+          memory: 768M
+
+  ms-notificaciones-test:
+    image: maven:3.8.5-openjdk-17-slim
+    container_name: ms-notificaciones-test
+    profiles:
+      - test-suite
+    volumes:
+      - ./notificaciones:/app
+      - maven_cache:/root/.m2
+    working_dir: /app
+    command: mvn clean test
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - DB_URL=jdbc:postgresql://postgres-db:5432/db_notificaciones
+      - DB_USERNAME=admin
+      - DB_PASSWORD=admin
+    depends_on:
+      postgres-db:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: '1.5'
+          memory: 768M
+
+  ms-bff-test:
+    image: maven:3.8.5-openjdk-17-slim
+    container_name: ms-bff-test
+    profiles:
+      - test-suite
+    volumes:
+      - ./bff:/app
+      - maven_cache:/root/.m2
+    working_dir: /app
+    command: mvn clean test
+    environment:
+      - SPRING_APPLICATION_NAME=ms-bff
+      - SERVER_PORT=8087
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - SERVICES_MASCOTAS_URL=http://ms-gestion-mascotas:8081
+      - SERVICES_GEOLOCALIZACION_URL=http://ms-geolocalizacion:8083
+      - SERVICES_COINCIDENCIAS_URL=http://ms-motor-coincidencias:8084
+      - SERVICES_USUARIOS_URL=http://ms-usuarios:8085
+      - SERVICES_NOTIFICACIONES_URL=http://ms-notificaciones:8086
+    depends_on:
+      - eureka-server
+    deploy:
+      resources:
+        limits:
+          cpus: '1.5'
+          memory: 768M
+
+# Recuerda tener definido el volumen global al final del archivo:
 volumes:
   pg_data_local:
+  maven_cache:
