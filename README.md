@@ -1,11 +1,11 @@
-# 🐾 Sistema de Gestión y Adopción de Mascotas - Fullstack III
+# 🐾 Sistema de Gestión de perdidas y encuentros de Mascotas - Fullstack III
 
 ![Java](https://img.shields.io/badge/Java-17-ED8B00?style=for-the-badge&logo=java&logoColor=white)
 ![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.x-6DB33F?style=for-the-badge&logo=spring-boot&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-316192?style=for-the-badge&logo=postgresql&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=for-the-badge&logo=docker&logoColor=white)
 
-Este repositorio contiene la arquitectura backend orientada a microservicios para la plataforma de gestión, geolocalización y coincidencias (*match*) de mascotas.
+Este repositorio contiene la arquitectura backend orientada a microservicios para la plataforma de gestión de perdidas y encuentros, geolocalización y coincidencias (*match*) de mascotas.
 
 ---
 
@@ -47,7 +47,7 @@ backend-eft-fullstack-III/
 | **Eureka Server** | `8761` | Actúa como el directorio del sistema. Todos los microservicios se registran aquí para poder encontrarse entre sí dinámicamente sin depender de IPs estáticas. |
 | **API Gateway** | `8080` | Punto de entrada único público. Recibe las peticiones del exterior, aplica filtros de seguridad (CORS, validaciones) y las enruta al servicio interno correspondiente. |
 | **BFF** | `8087` | Adaptador específico para la interfaz de usuario. En lugar de que el frontend llame a 5 servicios distintos, llama al BFF, el cual orquesta y junta los datos en una sola respuesta. |
-| **Mascotas** | `8081` | Administra el catálogo completo, permitiendo registrar mascotas perdidas, encontradas o en adopción. |
+| **Mascotas** | `8081` | Administra el catálogo completo, permitiendo registrar mascotas perdidas, encontradas. |
 | **Geolocalización** | `8083` | Calcula distancias y maneja las coordenadas (latitud/longitud) de los reportes. |
 | **Coincidencias** | `8084` | El cerebro del sistema. Analiza características y distancias para sugerir si una mascota encontrada es la misma que alguien reportó como perdida. |
 | **Usuarios** | `8085` | Gestiona el registro, autenticación (generación de tokens JWT) y perfiles de los dueños/adoptantes. |
