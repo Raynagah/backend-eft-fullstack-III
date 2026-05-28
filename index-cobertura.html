@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard de Cobertura - Fullstack III</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f2f5; color: #333; margin: 0; padding: 40px 20px; display: flex; justify-content: center; }
+        .container { background: #ffffff; max-width: 600px; width: 100%; padding: 30px; border-radius: 12px; box-shadow: 0 8px 16px rgba(0,0,0,0.1); }
+        h1 { color: #2c3e50; text-align: center; margin-bottom: 5px; }
+        p { text-align: center; color: #7f8c8d; margin-bottom: 25px; font-size: 14px; }
+        ul { list-style: none; padding: 0; margin: 0; }
+        li { margin-bottom: 12px; }
+        a { display: block; text-decoration: none; background-color: #f8f9fa; color: #2980b9; font-size: 16px; font-weight: 600; padding: 15px 20px; border: 1px solid #e9ecef; border-radius: 8px; transition: all 0.3s ease; }
+        a:hover { background-color: #e3f2fd; border-color: #bbdefb; color: #1565c0; transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.05); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 Cobertura Global</h1>
+        <p>Actualiza los tests y corre <code>node generar-dashboard.js</code></p>
+        <ul>
+            
+        <li>
+            <a href="./api-gateway/target/site/jacoco/index.html" target="_blank" style="display: flex; justify-content: space-between; align-items: center;">
+                <span>🌐 API Gateway</span>
+                <span style="background-color: #95a5a6; color: white; padding: 4px 12px; border-radius: 20px; font-weight: bold; font-size: 14px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                    N/A
+                </span>
+            </a>
+        </li>
+        <li>
+            <a href="./bff/target/site/jacoco/index.html" target="_blank" style="display: flex; justify-content: space-between; align-items: center;">
+                <span>🔗 BFF</span>
+                <span style="background-color: #2ecc71; color: white; padding: 4px 12px; border-radius: 20px; font-weight: bold; font-size: 14px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                    100%
+                </span>
+            </a>
+        </li>
+        <li>
+            <a href="./eureka-server/target/site/jacoco/index.html" target="_blank" style="display: flex; justify-content: space-between; align-items: center;">
+                <span>📡 Eureka Server</span>
+                <span style="background-color: #95a5a6; color: white; padding: 4px 12px; border-radius: 20px; font-weight: bold; font-size: 14px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                    N/A
+                </span>
+            </a>
+        </li>
+        <li>
+            <a href="./gestion-mascotas/target/site/jacoco/index.html" target="_blank" style="display: flex; justify-content: space-between; align-items: center;">
+                <span>🐾 Gestión Mascotas</span>
+                <span style="background-color: #2ecc71; color: white; padding: 4px 12px; border-radius: 20px; font-weight: bold; font-size: 14px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                    100%
+                </span>
+            </a>
+        </li>
+        <li>
+            <a href="./ms-geolocalizacion/target/site/jacoco/index.html" target="_blank" style="display: flex; justify-content: space-between; align-items: center;">
+                <span>📍 MS Geolocalización</span>
+                <span style="background-color: #2ecc71; color: white; padding: 4px 12px; border-radius: 20px; font-weight: bold; font-size: 14px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                    100%
+                </span>
+            </a>
+        </li>
+        <li>
+            <a href="./ms-motor-coincidencias/target/site/jacoco/index.html" target="_blank" style="display: flex; justify-content: space-between; align-items: center;">
+                <span>🧩 MS Motor Coincidencias</span>
+                <span style="background-color: #2ecc71; color: white; padding: 4px 12px; border-radius: 20px; font-weight: bold; font-size: 14px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                    100%
+                </span>
+            </a>
+        </li>
+        <li>
+            <a href="./notificaciones/target/site/jacoco/index.html" target="_blank" style="display: flex; justify-content: space-between; align-items: center;">
+                <span>🔔 Notificaciones</span>
+                <span style="background-color: #2ecc71; color: white; padding: 4px 12px; border-radius: 20px; font-weight: bold; font-size: 14px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                    100%
+                </span>
+            </a>
+        </li>
+        <li>
+            <a href="./usuarios/target/site/jacoco/index.html" target="_blank" style="display: flex; justify-content: space-between; align-items: center;">
+                <span>👥 Usuarios</span>
+                <span style="background-color: #2ecc71; color: white; padding: 4px 12px; border-radius: 20px; font-weight: bold; font-size: 14px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                    100%
+                </span>
+            </a>
+        </li>
+        </ul>
+    </div>
+</body>
+</html>

@@ -1,15 +1,24 @@
 package com.backend.ms_geolocalizacion.controller;
 
+import java.util.List;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.backend.ms_geolocalizacion.model.UbicacionAlerta;
 import com.backend.ms_geolocalizacion.service.GeoService;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/geolocalizacion")
@@ -44,11 +53,10 @@ public class GeoController {
     @DeleteMapping("/{id}")
     @Operation(summary = "Eliminar ubicación", description = "Borra un registro de ubicación mediante su ID")
     public ResponseEntity<Void> eliminar(@PathVariable Long id) {
-        if (geoService.eliminarUbicacion(id)) {
-            return ResponseEntity.noContent().build();
-        }
-        return ResponseEntity.notFound().build();
+        geoService.eliminarUbicacion(id);
+        return ResponseEntity.noContent().build();
     }
+
     @GetMapping("/{reporteId}")
     @Operation(summary = "Obtener ubicación por reporte")
     public ResponseEntity<UbicacionAlerta> obtenerPorReporte(@PathVariable Long reporteId) {

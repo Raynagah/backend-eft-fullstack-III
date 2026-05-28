@@ -184,6 +184,12 @@ Levanta el entorno completo junto a los contenedores de prueba automatizados:
 docker compose --profile test-suite up --build
 ```
 
+Si se agregan test ejecutar:
+
+```bash
+docker-compose --profile reportes up generar-dashboard
+```
+
 ---
 
 # 🛠️ Resolución de Problemas (Troubleshooting)
@@ -211,6 +217,20 @@ wsl --shutdown
 ## 3. Solucionar errores Maven (`zip file is empty`)
 
 Si cancelaste una ejecución y Maven quedó corrupto en caché:
+
+1.- Bajar contenedores
+
+```bash
+docker compose down
+```
+
+2.- Limpiar contenedores
+
+```bash
+docker container prune -f
+```
+
+3.- Eliminar el volumen de cache
 
 ```bash
 docker volume rm backend-eft-fullstack-iii_maven_cache

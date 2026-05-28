@@ -1,17 +1,28 @@
 package com.backend.ms_motor_coincidencias.service;
 
-import com.backend.ms_motor_coincidencias.dto.ResultadoMatchDTO;
-import org.springframework.stereotype.Service;
-
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+
+import org.springframework.stereotype.Service;
+
+import com.backend.ms_motor_coincidencias.dto.ResultadoMatchDTO;
+import com.backend.ms_motor_coincidencias.exception.BadRequestException;
 
 @Service
 public class CoincidenciaService {
 
     // Metodo principal que evalúa una mascota perdida contra una lista de encontradas
     public List<ResultadoMatchDTO> evaluarCoincidencias(ResultadoMatchDTO perdida, List<ResultadoMatchDTO> candidatas) {
+        
+        // --- VALIDACIONES DE ENTRADA ---
+        if (perdida == null) {
+            throw new BadRequestException("El objeto de mascota original no puede ser nulo.");
+        }
+        if (candidatas == null) {
+            throw new BadRequestException("La lista de candidatas no puede ser nula.");
+        }
+
         List<ResultadoMatchDTO> matches = new ArrayList<>();
 
         for (ResultadoMatchDTO candidata : candidatas) {

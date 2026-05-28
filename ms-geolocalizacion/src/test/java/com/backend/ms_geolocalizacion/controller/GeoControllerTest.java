@@ -1,21 +1,29 @@
 package com.backend.ms_geolocalizacion.controller;
 
-import com.backend.ms_geolocalizacion.model.UbicacionAlerta;
-import com.backend.ms_geolocalizacion.service.GeoService;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import static org.mockito.ArgumentMatchers.any;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import com.backend.ms_geolocalizacion.exception.ResourceNotFoundException;
+import com.backend.ms_geolocalizacion.model.UbicacionAlerta;
+import com.backend.ms_geolocalizacion.service.GeoService;
 
 @ExtendWith(MockitoExtension.class)
 class GeoControllerTest {
@@ -29,6 +37,7 @@ class GeoControllerTest {
     private UbicacionAlerta ubicacion;
 
     @BeforeEach
+    @SuppressWarnings("unused")
     void setUp() {
         ubicacion = new UbicacionAlerta();
         ubicacion.setId(1L);
@@ -68,22 +77,29 @@ class GeoControllerTest {
 
     @Test
     void eliminar_CuandoExiste_DebeRetornar204NoContent() {
-        // Simulamos que el servicio devuelve true (sí lo eliminó)
-        when(geoService.eliminarUbicacion(1L)).thenReturn(true);
+        // Al retornar void, usamos doNothing()
+        doNothing().when(geoService).eliminarUbicacion(1L);
 
         ResponseEntity<Void> response = geoController.eliminar(1L);
 
         assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
+        verify(geoService, times(1)).eliminarUbicacion(1L);
     }
 
     @Test
-    void eliminar_CuandoNoExiste_DebeRetornar404NotFound() {
-        // Simulamos que el servicio devuelve false (no lo encontró)
-        when(geoService.eliminarUbicacion(2L)).thenReturn(false);
+    void eliminar_CuandoNoExiste_DebePropagarResourceNotFoundException() {
+        // 1. Simulamos que el servicio lanza la excepción por no encontrar el ID
+        doThrow(new ResourceNotFoundException("No se encontró la ubicación"))
+                .when(geoService).eliminarUbicacion(2L);
 
-        ResponseEntity<Void> response = geoController.eliminar(2L);
+        // 2. Asignarlo a una variable 'exception'
+        ResourceNotFoundException exception = assertThrows(
+                ResourceNotFoundException.class, 
+                () -> geoController.eliminar(2L)
+        );
 
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        // 3. Validamos que el mensaje dentro de la excepción sea el esperado
+        assertEquals("No se encontró la ubicación", exception.getMessage());
     }
 
     @Test
