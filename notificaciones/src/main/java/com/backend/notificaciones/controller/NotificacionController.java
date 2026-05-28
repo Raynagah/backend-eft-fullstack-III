@@ -18,8 +18,11 @@ import java.util.List;
 @Tag(name = "Notificaciones", description = "Gestión de alertas y estados de lectura")
 public class NotificacionController {
 
+    // Inyectamos el servicio de notificaciones para manejar la lógica de negocio
     private final NotificacionService notificacionService;
 
+
+    // Endpoint para recibir coincidencias del motor de IA, procesarlas y generar notificaciones para los usuarios
     @Operation(summary = "Procesar coincidencias", description = "Recibe matches del motor de IA.")
     @PostMapping("/procesar-match")
     public ResponseEntity<String> recibirCoincidencias(@Valid @RequestBody List<NotificacionMatchDTO> dtos) {
@@ -27,18 +30,21 @@ public class NotificacionController {
         return ResponseEntity.ok("Notificaciones procesadas exitosamente.");
     }
 
+    // Endpoint para marcar una notificación como leída, cambiando su estado a true en la variable 'leido'  
     @Operation(summary = "Marcar notificación como leída", description = "Cambia el estado de la variable 'leido' a true.")
     @PatchMapping("/{id}/leer")
     public ResponseEntity<Notificacion> marcarLeida(@PathVariable Long id) {
         return ResponseEntity.ok(notificacionService.marcarComoLeida(id));
     }
 
+    // Endpoint para obtener todas las notificaciones de un usuario específico, utilizando su ID como parámetro de búsqueda
     @Operation(summary = "Obtener por ID de usuario", description = "Búsqueda técnica por ID.")
     @GetMapping("/usuario/{usuarioId}")
     public ResponseEntity<List<Notificacion>> obtenerPorUsuario(@PathVariable Long usuarioId) {
         return ResponseEntity.ok(notificacionService.obtenerPorUsuario(usuarioId));
     }
 
+    // Endpoint para eliminar una notificación específica por su ID, eliminándola de la base de datos
     @Operation(summary = "Eliminar notificación")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminarNotificacion(@PathVariable Long id) {
@@ -46,6 +52,7 @@ public class NotificacionController {
         return ResponseEntity.noContent().build();
     }
 
+    // Endpoint para obtener todas las notificaciones, principalmente para pruebas y administración, sin filtros específicos
     @Operation(summary = "Obtener todas las notificaciones")
     @GetMapping("/todas")
     public ResponseEntity<List<Notificacion>> obtenerTodas() {

@@ -10,6 +10,7 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    // Manejo de validaciones de DTOs, retorna un mapa con el campo y el mensaje de error
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public Map<String, String> manejarValidaciones(MethodArgumentNotValidException ex) {
@@ -23,6 +24,7 @@ public class GlobalExceptionHandler {
         return errores;
     }
 
+    // Manejo de excepciones generales, retorna un mensaje genérico para no exponer detalles internos
     @ResponseStatus(HttpStatus.NOT_FOUND)
     @ExceptionHandler(RuntimeException.class)
     public Map<String, String> manejarRuntime(RuntimeException ex) {
@@ -31,6 +33,7 @@ public class GlobalExceptionHandler {
         return error;
     }
 
+    // Manejo de cualquier otra excepción no controlada, retorna un mensaje genérico para no exponer detalles internos
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     @ExceptionHandler(Exception.class)
     public Map<String, String> manejarGeneral(Exception ex) {

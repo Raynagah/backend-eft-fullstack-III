@@ -12,19 +12,19 @@ import java.util.Date;
 @Component
 public class JwtUtil {
 
-    // 1. Ahora leemos la clave secreta desde las propiedades de configuración
+    // 1. Leemos la clave secreta desde las propiedades de configuración
     // Si no la encuentra, usa un valor por defecto (útil para desarrollo)
     @Value("${jwt.secret:tu_clave_secreta_super_segura_y_larga_de_al_menos_32_caracteres}")
     private String secretKey;
 
     private final long EXPIRATION = 86400000;
 
-    // 2. Métodoi para convertir el String en la llave criptográfica real
+    // 2. Método para convertir el String en la llave criptográfica real
     private Key getSigningKey() {
         return Keys.hmacShaKeyFor(secretKey.getBytes());
     }
 
-    // 3. ¡Agregamos el userId a los parámetros para que el BFF pueda leerlo luego!
+    // 3. Agregamos el userId a los parámetros para que el BFF pueda leerlo luego y asociar el token al usuario correcto
     public String generarToken(String correo, String sessionId, Long userId) {
         return Jwts.builder()
                 .setSubject(correo)

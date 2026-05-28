@@ -13,10 +13,15 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class NotificacionService {
+    // Servicio principal para gestionar las notificaciones, incluyendo la lógica de negocio para procesar 
+    // coincidencias detectadas por el motor de IA, interactuar con el microservicio de reportes y manejar 
+    // las operaciones CRUD de las notificaciones
 
     private final NotificacionRepository notificacionRepository;
     private final ReporteClient reporteClient; // Cliente Feign inyectado
 
+    // Método para procesar las coincidencias recibidas del motor de IA, creando notificaciones 
+    // solo si el porcentaje de similitud es mayor o igual al 85%
     public void procesarNotificaciones(List<NotificacionMatchDTO> coincidencias) {
         System.out.println("Recibidas " + coincidencias.size() + " posibles coincidencias");
 
@@ -30,9 +35,9 @@ public class NotificacionService {
         });
     }
 
+    // Método privado para guardar la notificación en la base de datos y realizar la llamada Feign para obtener los datos del reporte original
     private void guardarYNotificar(NotificacionMatchDTO dto) {
-        // LLAMADA FEIGN: Obtenemos los datos del reporte original
-        // Suponiendo que el endpoint de reportes devuelve el DTO que mostraste
+        // LLAMADA FEIGN: Obtenemos los datos del reporte original utilizando el ID del reporte que viene en el DTO de coincidencia
         ReporteRequestDTO reporteOriginal = reporteClient.obtenerReportePorId(dto.getReporteId());
 
         Notificacion notificacion = new Notificacion();
@@ -52,10 +57,12 @@ public class NotificacionService {
         System.out.println("NOTIFICACIÓN CREADA para Usuario ID: " + reporteOriginal.getUsuarioId());
     }
 
+    // Método para obtener todas las notificaciones de un usuario específico, utilizando su ID como parámetro de búsqueda
     public List<Notificacion> obtenerPorUsuario(Long usuarioId) {
         return notificacionRepository.findByUsuarioIdOrderByFechaCreacionDesc(usuarioId);
     }
 
+    // Método para eliminar una notificación específica por su ID, eliminándola de la base de datos
     public void eliminarNotificacion(Long id) {
         if (!notificacionRepository.existsById(id)) {
             throw new RuntimeException("La notificación con ID " + id + " no existe.");
@@ -63,11 +70,12 @@ public class NotificacionService {
         notificacionRepository.deleteById(id);
     }
 
+    // Método para obtener todas las notificaciones, principalmente para pruebas y administración, sin filtros específicos
     public List<Notificacion> obtenerTodas() {
         return notificacionRepository.findAll();
     }
 
-    // --- Marcar como leída ---
+    // Método para marcar una notificación como leída, cambiando su estado a true en la variable 'leido'
     @Transactional
     public Notificacion marcarComoLeida(Long id) {
         Notificacion notificacion = notificacionRepository.findById(id)

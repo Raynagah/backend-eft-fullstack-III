@@ -9,6 +9,7 @@ import jakarta.validation.constraints.Size;
 
 public record UsuarioRequestDTO(
 
+        // DTO para crear un nuevo usuario, incluye validaciones básicas
         @NotBlank(message = "El nombre es obligatorio")
         @Size(min = 3, max = 50)
         String nombre,

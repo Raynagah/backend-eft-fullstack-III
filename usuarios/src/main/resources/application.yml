@@ -8,13 +8,13 @@ spring:
   application:
     name: ms-usuarios
 
-  # CONEXIÓN PARAMETRIZADA A LA BASE DE DATOS DOCKER/AWS
+  # CONFIGURACIÓN DE DATASOURCE, utilizando variables de entorno para mayor flexibilidad y seguridad
   datasource:
     url: ${DB_URL:jdbc:postgresql://localhost:5432/db_usuarios}
     username: ${DB_USERNAME:admin}
     password: ${DB_PASSWORD:admin}
 
-  # CONFIGURACIÓN DE JPA / HIBERNATE
+  # CONFIGURACIÓN DE JPA, para que Hibernate gestione automáticamente las tablas y utilice el dialecto correcto para PostgreSQL
   jpa:
     hibernate:
       ddl-auto: update
@@ -23,12 +23,13 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
     show-sql: true
 
-# CONFIGURACIÓN DE EUREKA CLIENT
+# CONFIGURACIÓN DE EUREKA CLIENT, para que el microservicio se registre correctamente en el servidor de descubrimiento
 eureka:
   client:
     service-url:
       defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
 
+# CONFIGURACIÓN DE SPRINGDOC PARA LA DOCUMENTACIÓN DE LA API, con opciones para mejorar la experiencia de uso de Swagger UI
 springdoc:
   show-actuator: true
   swagger-ui:

@@ -13,7 +13,8 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class Usuario {
-
+    // Entidad principal del sistema, representa a un usuario registrado
+    
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
