@@ -10,7 +10,7 @@ import lombok.Data;
 @Data
 @Schema(description = "DTO para procesar una coincidencia detectada")
 public class NotificacionMatchDTO {
-    
+    // DTO para recibir datos del motor de IA sobre coincidencias detectadas, con validaciones y anotaciones de Swagger
     @NotNull
     private Long reporteId;
     

@@ -7,7 +7,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Configuration
 public class SecurityBeansConfig {
-
+    
+    // Bean para el PasswordEncoder, utilizamos BCrypt que es un algoritmo de hashing seguro para almacenar contraseñas
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();

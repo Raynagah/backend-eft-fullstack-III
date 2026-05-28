@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  # 0. BASE DE DATOS LOCAL
+  # 0. Base de Datos LOCAL
   postgres-db:
     image: postgres:15-alpine
     container_name: postgres-db
@@ -36,7 +36,7 @@ services:
     depends_on:
       - postgres-db
 
-  # 2. MICROSERVICIO DE MASCOTAS
+  # 2. Microservicio de Mascotas
   ms-gestion-mascotas:
     build: ./gestion-mascotas
     container_name: ms-gestion-mascotas
@@ -67,7 +67,7 @@ services:
       eureka-server:
         condition: service_healthy
 
-  # 4. MICROSERVICIO DE GEOLOCALIZACIÓN
+  # 4. Microservicio de Geolocalización
   ms-geolocalizacion:
     build: ./ms-geolocalizacion
     container_name: ms-geolocalizacion
@@ -85,7 +85,7 @@ services:
       eureka-server:
         condition: service_healthy
 
-  # 5. MOTOR DE COINCIDENCIAS
+  # 5. Motor de Coincidencias
   ms-motor-coincidencias:
     build: ./ms-motor-coincidencias
     container_name: ms-motor-coincidencias
@@ -103,7 +103,7 @@ services:
       eureka-server:
         condition: service_healthy
 
-  # 6. MICROSERVICIO DE USUARIOS
+  # 6. Microservicio de Usuarios
   ms-usuarios:
     build: ./usuarios
     container_name: ms-usuarios
@@ -122,7 +122,7 @@ services:
       eureka-server:
         condition: service_healthy
 
-  # 6.1 MICROSERVICIO DE NOTIFICACIONES
+  # 6.1 Microservicio de Notificaciones
   ms-notificaciones:
     build: ./notificaciones
     container_name: ms-notificaciones
@@ -162,9 +162,9 @@ services:
       - ms-usuarios
       - ms-motor-coincidencias
 
-# ========================================================
-  # SECCIÓN DE PRUEBAS Y REPORTES (JACOCO) - SOLO CON TEST
-  # ========================================================
+
+  # Sección de Pruebas y Reportes (JACOCO - TEST)
+
 
   ms-usuarios-test:
     image: maven:3.8.5-openjdk-17-slim
@@ -323,6 +323,7 @@ services:
         limits:
           cpus: '1.5'
           memory: 768M
+  
   generar-dashboard:
     image: node:20-alpine
     container_name: generador_cobertura
@@ -347,7 +348,7 @@ services:
         condition: service_completed_successfully
       ms-bff-test:
         condition: service_completed_successfully
-# Recuerda tener definido el volumen global al final del archivo:
+
 volumes:
   pg_data_local:
   maven_cache:

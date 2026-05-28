@@ -28,7 +28,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ExtendWith(MockitoExtension.class)
 class UsuarioControllerTest {
 
-    // MockMvc es la herramienta principal aquí: simula peticiones HTTP sin levantar un servidor real
+    // MockMvc es la herramienta principal que simula peticiones HTTP sin levantar un servidor real
     private MockMvc mockMvc;
 
     // Simulamos el servicio porque no queremos ir a la base de datos real

@@ -3,6 +3,7 @@ package com.backend.usuarios.dto;
 import jakarta.validation.constraints.*;
 
 public record UsuarioUpdateDTO(
+        // DTO para actualizar datos del usuario, similar al request pero sin correo ni password
         @NotBlank(message = "El nombre es obligatorio")
         @Size(min = 3, max = 50)
         String nombre,

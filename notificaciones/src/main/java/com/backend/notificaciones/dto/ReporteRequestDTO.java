@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @Schema(description = "Objeto de transferencia para los datos del reporte de mascotas")
 public class ReporteRequestDTO {
-
+        // DTO para recibir los datos del reporte de mascotas desde el frontend, con validaciones y anotaciones de Swagger
         @NotNull(message = "El ID de usuario es obligatorio")
         private Long usuarioId;
 

@@ -5,7 +5,7 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
-// El name debe coincidir con el nombre del MS de reportes en Eureka/Config
+// FeignClient para comunicarse con el microservicio de gestión de mascotas, utilizando el nombre registrado en Eureka
 @FeignClient(name = "ms-gestion-mascotas")
 public interface ReporteClient {
 

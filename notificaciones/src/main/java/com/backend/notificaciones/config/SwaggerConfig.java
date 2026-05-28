@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.servers.Server;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
+// Configuración de OpenAPI/Swagger para documentar la API REST del microservicio de notificaciones
 @OpenAPIDefinition(
         servers = {@Server(url = "/", description = "Servidor local")},
         info = @Info(

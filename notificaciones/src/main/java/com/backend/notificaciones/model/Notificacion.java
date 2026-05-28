@@ -8,6 +8,8 @@ import java.time.LocalDateTime;
 @Table(name = "notificaciones")
 @Data
 public class Notificacion {
+    // Entidad que representa una notificación en la base de datos, con campos para almacenar toda la información relevante 
+    // sobre la coincidencia detectada y su estado de lectura
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
