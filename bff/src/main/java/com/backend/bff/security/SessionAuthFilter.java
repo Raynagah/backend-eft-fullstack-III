@@ -1,19 +1,22 @@
 package com.backend.bff.security;
 
+import java.io.IOException;
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
+import org.springframework.stereotype.Component; // ➡️ NUEVO IMPORT
+import org.springframework.web.filter.OncePerRequestFilter;
+
 import com.backend.bff.service.AuthService;
+
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
-import org.springframework.stereotype.Component;
-import org.springframework.web.filter.OncePerRequestFilter;
-
-import java.io.IOException;
-import java.util.ArrayList;
+import jakarta.servlet.http.HttpServletResponse; // ➡️ NUEVO IMPORT
 
 @Component
 public class SessionAuthFilter extends OncePerRequestFilter {
@@ -22,7 +25,7 @@ public class SessionAuthFilter extends OncePerRequestFilter {
     private AuthService authService;
 
     @Autowired
-    private JwtService jwtService; // Inyectamos nuestro nuevo servicio
+    private JwtService jwtService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -43,8 +46,9 @@ public class SessionAuthFilter extends OncePerRequestFilter {
             // 1. Extraemos los datos REALES del token
             Long userId = jwtService.extractUserId(token);
             String correo = jwtService.extractCorreo(token);
+            String rol = jwtService.extractRol(token); // ➡️ NUEVA LÍNEA: Extraemos el rol del claim del JWT
 
-            // 2. Validamos la sesión en Redis/Base de datos
+            // 2. Validamos la sesión en el microservicio de Usuarios (Neon DB / Redis)
             if (!authService.esSesionValida(userId, sessionId)) {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 response.getWriter().write("Sesion invalida o iniciada en otro dispositivo");
@@ -53,25 +57,30 @@ public class SessionAuthFilter extends OncePerRequestFilter {
 
             // 3. CONTEXTO DE SEGURIDAD REAL:
             // Si llegamos aquí, el token es válido y la sesión es correcta.
-            // Le decimos a Spring Security "¡Este usuario está autenticado!"
             if (correo != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 
-                // Creamos el objeto de autenticación (Aquí podrías pasar los roles si los tuvieras en vez de un ArrayList vacío)
-                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                        correo, // El principal (identificador del usuario)
-                        null,   // Las credenciales (ya no las necesitamos porque confiamos en el token)
-                        new ArrayList<>() // Authorities/Roles (vacío por ahora)
+                // ➡️ NUEVA LÍNEA: Creamos la autoridad/rol mapeada con el prefijo "ROLE_" que exige Spring Security.
+                // Convierte 'admin' en 'ROLE_ADMIN' y 'cliente' en 'ROLE_CLIENTE'
+                List<SimpleGrantedAuthority> authorities = List.of(
+                        new SimpleGrantedAuthority("ROLE_" + rol.toUpperCase())
                 );
 
-                // Le agregamos los detalles de la petición web (IP, etc.)
+                // Creamos el objeto de autenticación inyectando las autoridades reales
+                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                        correo,       // El principal (identificador del usuario)
+                        null,         // Las credenciales (no se necesitan, ya confiamos en el token)
+                        authorities   // ➡️ MODIFICACIÓN: Pasamos los roles reales en lugar de una lista vacía
+                );
+
+                // Le agregamos los detalles de la petición web (IP, metadatos, etc.)
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
-                // Lo guardamos en el contexto global de seguridad
+                // Guardamos el usuario autenticado con su respectivo Rol en el contexto global de Spring Security
                 SecurityContextHolder.getContext().setAuthentication(authToken);
             }
 
         } catch (Exception e) {
-            // Si parseClaimsJws falla (token modificado o expirado), cae aquí.
+            // Si parseClaimsJws falla (token modificado, firma inválida o expirado), cae aquí.
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.getWriter().write("Token invalido o expirado");
             return;

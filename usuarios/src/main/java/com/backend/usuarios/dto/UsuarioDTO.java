@@ -10,5 +10,6 @@ public record UsuarioDTO(
         String genero,
         String direccion,
         String ocupacion,
-        String fotoUrl
+        String fotoUrl,
+        String tipoUsuario
 ) {}

@@ -1,14 +1,19 @@
 package com.backend.bff.controller;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.backend.bff.dto.LoginRequest;
-import com.backend.bff.dto.LoginResponse;
 import com.backend.bff.dto.UsuarioDTO;
 import com.backend.bff.service.AuthService;
+
 import feign.FeignException;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -33,10 +38,13 @@ public class AuthController {
     @PostMapping("/registro")
     public ResponseEntity<?> registro(@RequestBody UsuarioDTO request) {
         try {
-            // El BFF reenvía el usuario (con la contraseña intacta) al MS
+            // ¡MEDIDA DE SEGURIDAD CRÍTICA!
+            // Forzamos el rol "cliente" para que nadie pueda inyectar "admin" desde el formulario público
+            request.setTipoUsuario("cliente");
+
+            // El BFF reenvía el usuario al MS
             UsuarioDTO nuevoUsuario = authService.registrar(request);
 
-            // ¡MEDIDA DE SEGURIDAD!
             // Borramos la contraseña del objeto antes de enviarlo al frontend
             if (nuevoUsuario != null) {
                 nuevoUsuario.setPassword(null);

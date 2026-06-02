@@ -1,13 +1,14 @@
 package com.backend.usuarios.security;
 
-import io.jsonwebtoken.security.Keys;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import java.security.Key;
+import java.util.Date;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import java.security.Key;
-import java.util.Date;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
 
 @Component
 public class JwtUtil {
@@ -25,11 +26,12 @@ public class JwtUtil {
     }
 
     // 3. Agregamos el userId a los parámetros para que el BFF pueda leerlo luego y asociar el token al usuario correcto
-    public String generarToken(String correo, String sessionId, Long userId) {
+    public String generarToken(String correo, String sessionId, Long userId, String tipoUsuario) {
         return Jwts.builder()
                 .setSubject(correo)
                 .claim("sessionId", sessionId)
                 .claim("userId", userId)
+                .claim("rol", tipoUsuario)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION))
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)

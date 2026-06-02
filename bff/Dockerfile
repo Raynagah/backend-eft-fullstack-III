@@ -8,8 +8,7 @@ COPY src ./src
 
 # Compilamos usando la caché nativa de Docker para la carpeta .m2
 # Esto descarga solo lo que falta y nunca fallará por el bug de go-offline
-RUN --mount=type=cache,target=/root/.m2 mvn clean package -DskipTests
-
+RUN --mount=type=cache,target=/root/.m2 mvn clean package -DskipTests -Dmaven.wagon.http.retryHandler.count=3
 # --- ETAPA 2: Ejecución ---
 FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app

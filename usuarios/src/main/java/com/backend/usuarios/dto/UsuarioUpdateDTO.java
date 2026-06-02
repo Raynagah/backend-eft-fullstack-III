@@ -1,6 +1,11 @@
 package com.backend.usuarios.dto;
 
-import jakarta.validation.constraints.*;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 
 public record UsuarioUpdateDTO(
         // DTO para actualizar datos del usuario, similar al request pero sin correo ni password
@@ -20,5 +25,9 @@ public record UsuarioUpdateDTO(
 
         String fotoUrl,
         String ocupacion,
-        String direccion
+        String direccion,
+
+        @NotBlank(message = "El tipo de usuario es obligatorio")
+        @Pattern(regexp = "^(admin|cliente)$", message = "El rol solo puede ser 'admin' o 'cliente'")
+        String tipoUsuario
 ) {}

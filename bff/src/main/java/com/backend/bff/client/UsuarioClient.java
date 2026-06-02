@@ -1,11 +1,17 @@
 package com.backend.bff.client;
 
+import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
+
 import com.backend.bff.dto.LoginRequest;
 import com.backend.bff.dto.LoginResponse;
 import com.backend.bff.dto.UsuarioActualizacionDTO;
 import com.backend.bff.dto.UsuarioDTO;
-import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.web.bind.annotation.*;
 
 @FeignClient(name = "ms-usuarios", url = "${services.usuarios.url}")
 public interface UsuarioClient {
@@ -27,4 +33,10 @@ public interface UsuarioClient {
 
     @PostMapping("/api/usuarios")
     UsuarioDTO registrar(@RequestBody UsuarioDTO dto);
+
+    @PostMapping("/internal/admin/usuarios")
+    UsuarioDTO registrarAdmin(@RequestBody UsuarioDTO dto);
+
+    @PutMapping("/internal/admin/usuarios/{id}")
+    UsuarioDTO actualizarUsuarioPorAdmin(@PathVariable("id") Long id, @RequestBody UsuarioActualizacionDTO dto);
 }
