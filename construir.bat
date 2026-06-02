@@ -1,7 +1,13 @@
 @echo off
-echo =========================================
-echo INICIANDO COMPILACION SECUENCIAL (1x1)
-echo =========================================
+setlocal enabledelayedexpansion
+echo ===================================================
+echo INICIANDO CONFIGURACION Y COMPILACION SECUENCIAL (1x1)
+echo ===================================================
+echo.
+
+echo [Fase Inicial] Limpiando contenedores y volumenes previos...
+:: -v destruye el volumen pg_data_local para forzar la ejecucion de init-dbs.sql
+docker compose down -v
 echo.
 
 echo [1/8] Construyendo Eureka Server...
@@ -29,34 +35,33 @@ echo [8/8] Construyendo MS BFF...
 docker compose build ms-bff
 echo.
 
-echo =========================================
-echo COMPILACION TERMINADA
-echo Levantando el entorno en segundo plano...
-echo =========================================
+echo ===================================================
+echo FASE 1: Levantando Base de Datos e Infraestructura
+echo ===================================================
+:: Levantamos solo la base de datos primero para asegurar su inicializacion pura
+docker compose up -d postgres-db
+echo Esperando a que PostgreSQL procese init-dbs.sql...
+echo.
 
-echo =========================================
-echo FASE 1: Levantando los microservicios base
-echo =========================================
-:: Al NO usar el perfil test-suite aqui, solo levanta las apps normales
-docker compose up -d
+:: Levantamos el resto de servicios base de la aplicacion
+docker compose up -d eureka-server api-gateway ms-gestion-mascotas ms-geolocalizacion ms-motor-coincidencias ms-usuarios ms-notificaciones ms-bff
 
 echo.
-echo =========================================
+echo ===================================================
 echo Esperando a que Spring Boot y Eureka esten listos...
-echo (Esperando 300 segundos)
-echo =========================================
-timeout /t 300 /nobreak
+echo (Contador de estabilidad: 45 segundos)
+echo ===================================================
+timeout /t 45 /nobreak
 
 echo.
-echo =========================================
-echo FASE 2: Levantando y ejecutando los tests
-echo =========================================
-:: Ahora SI llamamos al perfil test-suite. Docker detectara que las apps
-:: ya estan corriendo y solo encendera los contenedores de prueba.
+echo ===================================================
+echo FASE 2: Levantando y ejecutando la Suite de Tests
+echo ===================================================
+:: Llama al perfil test-suite para los contenedores de pruebas unitarias/integracion
 docker compose --profile test-suite up
 
 echo.
-echo =========================================
-echo FLUJO COMPLETADO.
-echo =========================================
+echo ===================================================
+echo FLUJO COMPLETADO EXITOSAMENTE
+echo ===================================================
 pause
