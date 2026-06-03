@@ -12,7 +12,7 @@ RUN --mount=type=cache,target=/root/.m2 mvn clean package -DskipTests -Dmaven.wa
 # --- ETAPA 2: Ejecución ---
 FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
-
+RUN apk add --no-cache curl
 # Copiamos el JAR generado en la etapa anterior
 COPY --from=build /app/target/*.jar app.jar
 

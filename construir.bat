@@ -49,9 +49,9 @@ docker compose up -d eureka-server api-gateway ms-gestion-mascotas ms-geolocaliz
 echo.
 echo ===================================================
 echo Esperando a que Spring Boot y Eureka esten listos...
-echo (Contador de estabilidad: 45 segundos)
+echo (Contador de estabilidad: 250 segundos)
 echo ===================================================
-timeout /t 45 /nobreak
+timeout /t 250 /nobreak
 
 echo.
 echo ===================================================

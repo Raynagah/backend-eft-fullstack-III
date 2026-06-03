@@ -46,6 +46,9 @@ public class SecurityConfig {
                                 "/webjars/**"
                         ).permitAll()
 
+                        // 1. PERMITIR ACTUATOR SIN AUTENTICACIÓN:
+                        .requestMatchers("/actuator/health").permitAll()
+
                         // 3. Rutas públicas
                         .requestMatchers("/api/v1/auth/login").permitAll()
                         .requestMatchers("/api/v1/auth/registro").permitAll()

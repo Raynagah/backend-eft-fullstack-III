@@ -29,32 +29,14 @@ services:
     environment:
       - SPRING_PROFILES_ACTIVE=docker
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8761/actuator/health"]
+      test: ["CMD-SHELL", "curl -f http://localhost:8761/actuator/health || exit 1"]
       interval: 10s
       timeout: 5s
-      retries: 10
+      retries: 5
     depends_on:
       - postgres-db
 
-  # 2. Microservicio de Mascotas
-  ms-gestion-mascotas:
-    build: ./gestion-mascotas
-    container_name: ms-gestion-mascotas
-    ports:
-      - "8081:8081"
-    environment:
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
-      - DB_URL=jdbc:postgresql://postgres-db:5432/db_mascotas
-      - DB_USERNAME=admin
-      - DB_PASSWORD=admin
-      - JAVA_OPTS=-Xms128m -Xmx256m
-    depends_on:
-      postgres-db:
-        condition: service_healthy
-      eureka-server:
-        condition: service_healthy
-
-  # 3. API GATEWAY
+  # 2. API GATEWAY
   api-gateway:
     build: ./api-gateway
     container_name: api-gateway
@@ -63,47 +45,16 @@ services:
     environment:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
       - JAVA_OPTS=-Xms128m -Xmx256m
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     depends_on:
       eureka-server:
         condition: service_healthy
 
-  # 4. Microservicio de Geolocalización
-  ms-geolocalizacion:
-    build: ./ms-geolocalizacion
-    container_name: ms-geolocalizacion
-    ports:
-      - "8083:8083"
-    environment:
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
-      - DB_URL=jdbc:postgresql://postgres-db:5432/db_geolocalizacion
-      - DB_USERNAME=admin
-      - DB_PASSWORD=admin
-      - JAVA_OPTS=-Xms128m -Xmx256m
-    depends_on:
-      postgres-db:
-        condition: service_healthy
-      eureka-server:
-        condition: service_healthy
-
-  # 5. Motor de Coincidencias
-  ms-motor-coincidencias:
-    build: ./ms-motor-coincidencias
-    container_name: ms-motor-coincidencias
-    ports:
-      - "8084:8084"
-    environment:
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
-      - DB_URL=jdbc:postgresql://postgres-db:5432/db_coincidencias
-      - DB_USERNAME=admin
-      - DB_PASSWORD=admin
-      - JAVA_OPTS=-Xms128m -Xmx256m
-    depends_on:
-      postgres-db:
-        condition: service_healthy
-      eureka-server:
-        condition: service_healthy
-
-  # 6. Microservicio de Usuarios
+  # 3. Microservicio de Usuarios
   ms-usuarios:
     build: ./usuarios
     container_name: ms-usuarios
@@ -116,13 +67,79 @@ services:
       - DB_PASSWORD=admin
       - JAVA_OPTS=-Xms128m -Xmx256m
       - JWT_SECRET=MiClaveSuperSecretaParaMascotas123456789!
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8085/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     depends_on:
-      postgres-db:
-        condition: service_healthy
-      eureka-server:
+      api-gateway:
         condition: service_healthy
 
-  # 6.1 Microservicio de Notificaciones
+  # 4. Microservicio de Mascotas
+  ms-gestion-mascotas:
+    build: ./gestion-mascotas
+    container_name: ms-gestion-mascotas
+    ports:
+      - "8081:8081"
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - DB_URL=jdbc:postgresql://postgres-db:5432/db_mascotas
+      - DB_USERNAME=admin
+      - DB_PASSWORD=admin
+      - JAVA_OPTS=-Xms128m -Xmx256m
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8081/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    depends_on:
+      ms-usuarios:
+        condition: service_healthy
+
+  # 5. Microservicio de Geolocalización
+  ms-geolocalizacion:
+    build: ./ms-geolocalizacion
+    container_name: ms-geolocalizacion
+    ports:
+      - "8083:8083"
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - DB_URL=jdbc:postgresql://postgres-db:5432/db_geolocalizacion
+      - DB_USERNAME=admin
+      - DB_PASSWORD=admin
+      - JAVA_OPTS=-Xms128m -Xmx256m
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8083/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    depends_on:
+      ms-gestion-mascotas:
+        condition: service_healthy
+
+  # 6. Motor de Coincidencias
+  ms-motor-coincidencias:
+    build: ./ms-motor-coincidencias
+    container_name: ms-motor-coincidencias
+    ports:
+      - "8084:8084"
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - DB_URL=jdbc:postgresql://postgres-db:5432/db_coincidencias
+      - DB_USERNAME=admin
+      - DB_PASSWORD=admin
+      - JAVA_OPTS=-Xms128m -Xmx256m
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8084/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    depends_on:
+      ms-geolocalizacion:
+        condition: service_healthy
+
+  # 7 Microservicio de Notificaciones
   ms-notificaciones:
     build: ./notificaciones
     container_name: ms-notificaciones
@@ -134,13 +151,16 @@ services:
       - DB_USERNAME=admin
       - DB_PASSWORD=admin
       - JAVA_OPTS=-Xms128m -Xmx256m
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8086/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     depends_on:
-      postgres-db:
+      ms-motor-coincidencias:
         condition: service_healthy
-      eureka-server:
-        condition: service_healthy
-
- # 7. BFF
+      
+  # 7. BFF
   ms-bff:
     build: ./bff
     container_name: ms-bff
@@ -155,16 +175,16 @@ services:
       - SERVICES_COINCIDENCIAS_URL=http://ms-motor-coincidencias:8084
       - SERVICES_USUARIOS_URL=http://ms-usuarios:8085
       - SERVICES_NOTIFICACIONES_URL=http://ms-notificaciones:8086
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8087/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     depends_on:
-      - eureka-server
-      - ms-gestion-mascotas
-      - ms-geolocalizacion
-      - ms-usuarios
-      - ms-motor-coincidencias
-
+      ms-notificaciones:
+        condition: service_healthy
 
   # Sección de Pruebas y Reportes (JACOCO - TEST)
-
 
   ms-usuarios-test:
     image: maven:3.8.5-openjdk-17-slim
@@ -183,9 +203,7 @@ services:
       - DB_PASSWORD=admin
       - JWT_SECRET=MiClaveSuperSecretaParaMascotas123456789!
     depends_on:
-      postgres-db:
-        condition: service_healthy
-      eureka-server:
+      ms-bff:
         condition: service_healthy
     deploy:
       resources:
@@ -209,10 +227,8 @@ services:
       - DB_USERNAME=admin
       - DB_PASSWORD=admin
     depends_on:
-      postgres-db:
-        condition: service_healthy
-      eureka-server:
-        condition: service_healthy
+      ms-usuarios-test:
+        condition: service_completed_successfully
     deploy:
       resources:
         limits:
@@ -235,10 +251,8 @@ services:
       - DB_USERNAME=admin
       - DB_PASSWORD=admin
     depends_on:
-      postgres-db:
-        condition: service_healthy
-      eureka-server:
-        condition: service_healthy
+      ms-gestion-mascotas-test:
+        condition: service_completed_successfully
     deploy:
       resources:
         limits:
@@ -261,10 +275,8 @@ services:
       - DB_USERNAME=admin
       - DB_PASSWORD=admin
     depends_on:
-      postgres-db:
-        condition: service_healthy
-      eureka-server:
-        condition: service_healthy
+      ms-motor-coincidencias-test:
+        condition: service_completed_successfully
     deploy:
       resources:
         limits:
@@ -287,10 +299,8 @@ services:
       - DB_USERNAME=admin
       - DB_PASSWORD=admin
     depends_on:
-      postgres-db:
-        condition: service_healthy
-      eureka-server:
-        condition: service_healthy
+      ms-geolocalizacion-test:
+        condition: service_completed_successfully
     deploy:
       resources:
         limits:
@@ -317,7 +327,8 @@ services:
       - SERVICES_USUARIOS_URL=http://ms-usuarios:8085
       - SERVICES_NOTIFICACIONES_URL=http://ms-notificaciones:8086
     depends_on:
-      - eureka-server
+      ms-notificaciones-test:
+        condition: service_completed_successfully
     deploy:
       resources:
         limits:
@@ -327,13 +338,10 @@ services:
   generar-dashboard:
     image: node:20-alpine
     container_name: generador_cobertura
-    # Montamos la raíz de tu proyecto dentro del contenedor
     volumes:
       - ./:/app
     working_dir: /app
-    # Ejecuta el script que creamos antes
     command: node generar-dashboard.js
-    # Lo unimos al mismo perfil de tus pruebas
     profiles: ["test-suite"]
     depends_on:
       ms-usuarios-test:

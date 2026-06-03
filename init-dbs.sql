@@ -25,7 +25,8 @@ CREATE TABLE usuarios (
     ocupacion VARCHAR(255),
     telefono VARCHAR(255) NOT NULL,
     session_id VARCHAR(255),
-    password VARCHAR(255)
+    password VARCHAR(255),
+    tipo_usuario VARCHAR(100)
 );
 
 INSERT INTO usuarios 

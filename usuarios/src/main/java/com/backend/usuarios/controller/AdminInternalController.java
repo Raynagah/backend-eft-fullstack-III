@@ -20,7 +20,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/internal/admin/usuarios") // 🔒 Rutas internas exclusivas
+@RequestMapping("/internal/admin/usuarios") 
 @RequiredArgsConstructor
 @Tag(name = "Admin Interno", description = "Endpoints internos para gestión total desde el BFF")
 public class AdminInternalController {
