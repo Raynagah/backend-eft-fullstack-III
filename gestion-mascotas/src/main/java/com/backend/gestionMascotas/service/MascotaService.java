@@ -105,6 +105,7 @@ public class MascotaService {
                 entidad.getTamano(),
                 entidad.getNombreContacto(),
                 entidad.getTelefonoContacto(),
+                entidad.getEmailContacto(),
                 entidad.getFotografiaUrl(),
                 entidad.getLatitud(),
                 entidad.getLongitud(),

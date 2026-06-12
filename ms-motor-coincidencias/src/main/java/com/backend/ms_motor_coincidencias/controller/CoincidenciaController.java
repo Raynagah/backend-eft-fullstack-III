@@ -60,7 +60,7 @@ public class CoincidenciaController {
 
         List<ResultadoMatchDTO> candidatas = todasLasMascotas.stream()
                 .filter(m -> m.getTipoReporte() != null && m.getTipoReporte().equalsIgnoreCase(tipoBuscado))
-                .filter(m -> m.getReporteId() != null && !m.getReporteId().equals(idReporte))
+                .filter(m -> m.getId() != null && !m.getId().equals(idReporte))
                 .collect(Collectors.toList());
 
         // --- 4. CÁLCULO DE PORCENTAJES ---
@@ -72,13 +72,13 @@ public class CoincidenciaController {
                 .map(r -> {
                     Coincidencia coincidencia = new Coincidencia();
                     coincidencia.setReporteOriginalId(idReporte);
-                    coincidencia.setReporteEncontradoId(r.getReporteId());
+                    coincidencia.setReporteEncontradoId(r.getId());
                     coincidencia.setPorcentajeSimilitud(r.getPorcentajeSimilitud());
                     coincidencia.setEmailNotificado(r.getEmailContacto());
                     coincidenciaRepository.save(coincidencia);
 
                     NotificacionMatchDTO dto = new NotificacionMatchDTO();
-                    dto.setReporteId(r.getReporteId());
+                    dto.setReporteId(r.getId());
                     dto.setPorcentajeSimilitud(r.getPorcentajeSimilitud());
                     dto.setFotografiaUrl(r.getFotografiaUrl());
                     dto.setTitulo("¡Posible coincidencia encontrada!");

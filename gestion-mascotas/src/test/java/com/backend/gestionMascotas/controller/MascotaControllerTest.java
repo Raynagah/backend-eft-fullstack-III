@@ -43,10 +43,10 @@ public class MascotaControllerTest {
         // ObjectMapper nos servirá para convertir objetos Java a JSON
         this.objectMapper = new ObjectMapper();
 
-        // 💡 CORRECCIÓN: Agregamos el usuarioId (125L) como segundo parámetro del constructor
+        // 💡 CORRECCIÓN: Agregamos el correo "juan@correo.com" y eliminamos la doble coma
         responseDTO = new ReporteResponseDTO(
                 1L, 125L, "PERDIDA", "Cachupín", "Perro", "Mestizo", "Dorado",
-                "Grande", "Juan", "123456", "url", -34.6, -58.3, null, "COMPLETED"
+                "Grande", "Juan", "123456", "juan@correo.com", "url", -34.6, -58.3, null, "COMPLETED"
         );
     }
 
