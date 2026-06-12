@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 
 public record ReporteResponseDTO(
         Long id,
+        Long usuarioId,
         String tipoReporte,
         String nombre,
         String especie,

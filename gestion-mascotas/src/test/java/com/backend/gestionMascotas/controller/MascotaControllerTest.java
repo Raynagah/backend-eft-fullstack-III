@@ -13,7 +13,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.validation.beanvalidation.CustomValidatorBean;
 
 import java.util.List;
 
@@ -44,9 +43,9 @@ public class MascotaControllerTest {
         // ObjectMapper nos servirá para convertir objetos Java a JSON
         this.objectMapper = new ObjectMapper();
 
-        // DTO de respuesta genérico para reutilizar en los tests
+        // 💡 CORRECCIÓN: Agregamos el usuarioId (125L) como segundo parámetro del constructor
         responseDTO = new ReporteResponseDTO(
-                1L, "PERDIDA", "Cachupín", "Perro", "Mestizo", "Dorado",
+                1L, 125L, "PERDIDA", "Cachupín", "Perro", "Mestizo", "Dorado",
                 "Grande", "Juan", "123456", "url", -34.6, -58.3, null, "COMPLETED"
         );
     }
@@ -56,7 +55,7 @@ public class MascotaControllerTest {
     void cuandoCrearReporte_entoncesRetornaStatus201YDto() throws Exception {
         // Arrange
         ReporteRequestDTO requestDTO = new ReporteRequestDTO(
-                125L, // ¡AQUÍ ESTABA EL ERROR! Cambiamos null por un ID válido
+                125L,
                 "PERDIDA", "Cachupín", "Perro", "Mestizo", "Dorado",
                 "Grande", "Juan Pérez", "12345678", "juan@correo.com", "url", -34.6, -58.3
         );
@@ -67,7 +66,9 @@ public class MascotaControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(requestDTO)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.nombre").value("Cachupín"));
+                .andExpect(jsonPath("$.nombre").value("Cachupín"))
+                // Opcional: Podrías validar también que el jsonPath traiga el usuarioId
+                .andExpect(jsonPath("$.usuarioId").value(125L));
 
         verify(mascotaService, times(1)).registrarReporte(any(ReporteRequestDTO.class));
     }

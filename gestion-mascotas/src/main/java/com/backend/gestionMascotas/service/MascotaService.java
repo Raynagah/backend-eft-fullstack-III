@@ -96,6 +96,7 @@ public class MascotaService {
     private ReporteResponseDTO convertirADTO(ReporteMascota entidad) {
         return new ReporteResponseDTO(
                 entidad.getId(),
+                entidad.getUsuarioId(),
                 entidad.getTipoReporte(),
                 entidad.getNombre(),
                 entidad.getEspecie(),
