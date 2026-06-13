@@ -3,14 +3,16 @@ package com.backend.gestionMascotas.service;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors; // <-- Agregamos esta importación
+import java.util.stream.Collectors;
 
-import com.backend.gestionMascotas.dto.ReporteResponseDTO;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.backend.gestionMascotas.client.GeolocalizacionClient;
 import com.backend.gestionMascotas.dto.ReporteRequestDTO;
+import com.backend.gestionMascotas.dto.ReporteResponseDTO;
 import com.backend.gestionMascotas.exception.ReporteNotFoundException;
 import com.backend.gestionMascotas.model.ReporteMascota;
 import com.backend.gestionMascotas.repository.MascotaRepository;
@@ -25,7 +27,8 @@ public class MascotaService {
     private final ReporteFactory reporteFactory;
     private final GeolocalizacionClient geoClient;
 
-    // ✅ AHORA DEVUELVE DTO
+    //Limpia las listas cacheadas porque hay un registro nuevo. Usamos allEntries = true para borrar todas las listas guardadas y evitar mostrar datos viejos.
+    @CacheEvict(value = {"mascotas_lista", "mascotas_tipo"}, allEntries = true)
     public ReporteResponseDTO registrarReporte(ReporteRequestDTO dto) {
         ReporteMascota nuevoReporte = reporteFactory.crearReporte(dto);
         nuevoReporte = mascotaRepository.save(nuevoReporte);
@@ -45,7 +48,7 @@ public class MascotaService {
             this.compensarReporte(nuevoReporte.getId());
         }
 
-        return convertirADTO(nuevoReporte); // <-- Usamos el conversor aquí
+        return convertirADTO(nuevoReporte);
     }
 
     public void compensarReporte(Long id) {
@@ -55,7 +58,9 @@ public class MascotaService {
         });
     }
 
+    // Limpia todas las cachés asociadas a mascotas al eliminar una
     @Transactional
+    @CacheEvict(value = {"mascotas_lista", "mascotas_tipo", "mascota_detalle"}, allEntries = true)
     public void eliminarReporte(Long id) {
         ReporteMascota reporte = mascotaRepository.findById(id)
                 .orElseThrow(() -> new ReporteNotFoundException(id));
@@ -69,30 +74,33 @@ public class MascotaService {
         mascotaRepository.delete(reporte);
     }
 
-    // ✅ AHORA DEVUELVE LISTA DE DTOs
+    // Guarda la lista completa en RAM, es ideal porque es la consulta que más harán los usuarios al entrar al feed.
+    @Cacheable(value = "mascotas_lista")
     public List<ReporteResponseDTO> obtenerTodosLosReportes() {
         return mascotaRepository.findAll()
                 .stream()
-                .map(this::convertirADTO) // <-- Convierte cada entidad de la lista a DTO
+                .map(this::convertirADTO)
                 .collect(Collectors.toList());
     }
 
-    // ✅ AHORA DEVUELVE LISTA DE DTOs
+    // Guarda listas filtradas por "PERDIDA" o "ENCONTRADA", se usa 'key' para separar la caché según el tipo que pide el usuario.
+    @Cacheable(value = "mascotas_tipo", key = "#tipoReporte")
     public List<ReporteResponseDTO> obtenerReportesPorTipo(String tipoReporte) {
         return mascotaRepository.findByTipoReporte(tipoReporte)
                 .stream()
-                .map(this::convertirADTO) // <-- Convierte cada entidad de la lista a DTO
+                .map(this::convertirADTO)
                 .collect(Collectors.toList());
     }
 
-    // ✅ AHORA DEVUELVE DTO
+    // Guarda el detalle de un solo reporte, ayuda a cargar rápido cuando alguien entra a ver los detalles y foto del animal.
+    @Cacheable(value = "mascota_detalle", key = "#id")
     public ReporteResponseDTO obtenerReportePorId(Long id) {
         ReporteMascota entidad = mascotaRepository.findById(id)
                 .orElseThrow(() -> new ReporteNotFoundException(id));
-        return convertirADTO(entidad); // <-- Convertimos antes de retornar
+        return convertirADTO(entidad);
     }
 
-    // Métodoo utilitario para convertir Entidad a DTO
+    // Metodo utilitario para convertir Entidad a DTO
     private ReporteResponseDTO convertirADTO(ReporteMascota entidad) {
         return new ReporteResponseDTO(
                 entidad.getId(),

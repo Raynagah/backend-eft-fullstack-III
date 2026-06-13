@@ -20,6 +20,16 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
     show-sql: true
 
+  # CONFIGURACIÓN DE CACHÉ Y REDIS
+  cache:
+    type: redis
+    redis:
+      time-to-live: 15m
+  data:
+    redis:
+      host: ${SPRING_DATA_REDIS_HOST:localhost}
+      port: ${SPRING_DATA_REDIS_PORT:6379}
+
 # CONFIGURACIÓN DE EUREKA CLIENT
 eureka:
   client:
@@ -28,7 +38,7 @@ eureka:
 
 # CONFIGURACIÓN DE SWAGGER / OPENAPI
 springdoc:
-  show-actuator: true 
+  show-actuator: true
   swagger-ui:
     use-root-path: true
     path: /swagger-ui.html
