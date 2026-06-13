@@ -1,6 +1,7 @@
 package com.backend.gestionMascotas.dto;
 
 import java.time.LocalDateTime;
+import java.io.Serializable;
 
 public record ReporteResponseDTO(
         Long id,
@@ -20,4 +21,4 @@ public record ReporteResponseDTO(
         LocalDateTime fechaReporte,
         String sagaStatus
 
-) {}
+) implements Serializable {}
