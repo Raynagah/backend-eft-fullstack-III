@@ -107,6 +107,10 @@ services:
       - JAVA_OPTS=-Xms128m -Xmx256m
       - SPRING_DATA_REDIS_HOST=redis
       - SPRING_DATA_REDIS_PORT=6379
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_RABBITMQ_PORT=5672
+      - SPRING_RABBITMQ_USERNAME=admin
+      - SPRING_RABBITMQ_PASSWORD=admin
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:8081/actuator/health || exit 1"]
       interval: 10s
@@ -116,6 +120,8 @@ services:
       ms-usuarios:
         condition: service_healthy
       redis:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
 
   # 5. Microservicio de Geolocalización
@@ -172,6 +178,10 @@ services:
       - DB_USERNAME=admin
       - DB_PASSWORD=admin
       - JAVA_OPTS=-Xms128m -Xmx256m
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_RABBITMQ_PORT=5672
+      - SPRING_RABBITMQ_USERNAME=admin
+      - SPRING_RABBITMQ_PASSWORD=admin
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:8086/actuator/health || exit 1"]
       interval: 10s
@@ -180,8 +190,10 @@ services:
     depends_on:
       ms-motor-coincidencias:
         condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
 
-  # 7. BFF
+  # 8. BFF
   ms-bff:
     build: ./bff
     container_name: ms-bff
@@ -204,6 +216,23 @@ services:
     depends_on:
       ms-notificaciones:
         condition: service_healthy
+
+  # 9. RabbitMQ
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"   # Puerto interno de comunicación AMQP
+      - "15672:15672" # Puerto del panel de administración web
+    environment:
+      - RABBITMQ_DEFAULT_USER=admin
+      - RABBITMQ_DEFAULT_PASS=admin
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
 
   # Sección de Pruebas y Reportes (JACOCO - TEST)
 

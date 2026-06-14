@@ -5,12 +5,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.backend.gestionMascotas.client.GeolocalizacionClient;
+import com.backend.gestionMascotas.config.RabbitMQConfig;
+import com.backend.gestionMascotas.dto.MascotaReportadaEvent;
 import com.backend.gestionMascotas.dto.ReporteRequestDTO;
 import com.backend.gestionMascotas.dto.ReporteResponseDTO;
 import com.backend.gestionMascotas.exception.ReporteNotFoundException;
@@ -26,8 +29,9 @@ public class MascotaService {
     private final MascotaRepository mascotaRepository;
     private final ReporteFactory reporteFactory;
     private final GeolocalizacionClient geoClient;
+    private final RabbitTemplate rabbitTemplate;
 
-    //Limpia las listas cacheadas porque hay un registro nuevo. Usamos allEntries = true para borrar todas las listas guardadas y evitar mostrar datos viejos.
+    // Limpia las listas cacheadas porque hay un registro nuevo. Usamos allEntries = true para borrar todas las listas guardadas y evitar mostrar datos viejos.
     @CacheEvict(value = {"mascotas_lista", "mascotas_tipo"}, allEntries = true)
     public ReporteResponseDTO registrarReporte(ReporteRequestDTO dto) {
         ReporteMascota nuevoReporte = reporteFactory.crearReporte(dto);
@@ -44,6 +48,18 @@ public class MascotaService {
 
             nuevoReporte.setSagaStatus("COMPLETED");
             mascotaRepository.save(nuevoReporte);
+
+            // Disparador de mensajería RabbitMQ
+
+            MascotaReportadaEvent evento = new MascotaReportadaEvent(
+                    nuevoReporte.getId(),
+                    nuevoReporte.getUsuarioId(),
+                    nuevoReporte.getNombre(),
+                    nuevoReporte.getTipoReporte()
+            );
+
+            rabbitTemplate.convertAndSend(RabbitMQConfig.EXCHANGE_NAME, RabbitMQConfig.ROUTING_KEY, evento);
+
         } catch (Exception e) {
             this.compensarReporte(nuevoReporte.getId());
         }
