@@ -32,9 +32,9 @@ CREATE TABLE usuarios (
 INSERT INTO usuarios 
 (id, correo, direccion, edad, foto_url, genero, nombre, ocupacion, telefono, session_id, password, tipo_usuario) 
 VALUES
-(4, 'ma@test.com', 'sucasa', 21, 'https://img.com/foto.jpg', 'Binario', 'Mayckol', 'Estudiante', '1231231', NULL, '$2a$10$BQbOsR5odkqx35zAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA', 'cliente'),
-(5, 'ni@test.com', 'Avenida mirador', 24, 'https://img.com/', 'Masculino', 'Nicolas', 'Estudiante', '1231231', '68d90d98-0293-4118-9dd0-000000000000', '$2a$10$4q.i5zv/UTLZZdiAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA', 'admin'),
-(6, 'ro.vargas@duocuc.cl', 'xddd', 27, 'img.com', 'Masculino', 'Rodrigo', 'Estudiante', '123123123', NULL, '$2a$10$/Ziy7W/APEUdZDeAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA', 'cliente');
+(4, 'ma@test.com', 'sucasa', 21, 'https://img.com/foto.jpg', 'Binario', 'Mayckol', 'Estudiante', '1231231', NULL, '$2a$10$E6AfMrUPRkyZy4mqe9F4yOW8hKepu.7BebTh4GlIxLzd2AJZPB6uO', 'cliente'),
+(5, 'ni@test.com', 'Avenida mirador', 24, 'https://img.com/', 'Masculino', 'Nicolas', 'Estudiante', '1231231', '68d90d98-0293-4118-9dd0-000000000000', '$2a$10$E6AfMrUPRkyZy4mqe9F4yOW8hKepu.7BebTh4GlIxLzd2AJZPB6uO', 'admin'),
+(6, 'ro.vargas@duocuc.cl', 'xddd', 27, 'img.com', 'Masculino', 'Rodrigo', 'Estudiante', '123123123', NULL, '$2a$10$E6AfMrUPRkyZy4mqe9F4yOW8hKepu.7BebTh4GlIxLzd2AJZPB6uO', 'admin');
 
 -- Actualizamos el contador de IDs para que el próximo usuario registrado sea el ID 7
 SELECT setval(pg_get_serial_sequence('usuarios', 'id'), (SELECT MAX(id) FROM usuarios));
