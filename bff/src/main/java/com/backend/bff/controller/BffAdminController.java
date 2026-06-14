@@ -2,13 +2,7 @@ package com.backend.bff.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.backend.bff.dto.UsuarioActualizacionDTO;
 import com.backend.bff.dto.UsuarioDTO;
@@ -42,6 +36,25 @@ public class BffAdminController {
             UsuarioDTO usuarioActualizado = bffUsuarioService.actualizarUsuarioPorAdmin(id, request);
             if (usuarioActualizado != null) usuarioActualizado.setPassword(null);
             return ResponseEntity.ok(usuarioActualizado);
+        } catch (FeignException e) {
+            return ResponseEntity.status(e.status()).body(e.contentUTF8());
+        }
+    }
+    @GetMapping
+    public ResponseEntity<?> listarUsuarios() {
+        try {
+            return ResponseEntity.ok(bffUsuarioService.listarTodos());
+        } catch (FeignException e) {
+            return ResponseEntity.status(e.status()).body(e.contentUTF8());
+        }
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> eliminarUsuario(@PathVariable Long id) {
+        try {
+            bffUsuarioService.eliminarUsuario(id);
+            // Retornamos un JSON para que Axios en Vue lo procese correctamente
+            return ResponseEntity.ok("{\"mensaje\": \"Usuario eliminado correctamente\"}");
         } catch (FeignException e) {
             return ResponseEntity.status(e.status()).body(e.contentUTF8());
         }
