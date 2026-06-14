@@ -24,9 +24,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import com.backend.usuarios.dto.LoginResponseDTO;
+import com.backend.usuarios.dto.UsuarioDTO;
 import com.backend.usuarios.dto.UsuarioRequestDTO;
 import com.backend.usuarios.dto.UsuarioUpdateDTO;
-import com.backend.usuarios.model.Usuario;
 import com.backend.usuarios.service.UsuarioService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -42,26 +42,32 @@ class UsuarioControllerTest {
     private UsuarioController usuarioController;
 
     private ObjectMapper objectMapper;
-    private Usuario usuarioMock;
+    private UsuarioDTO usuarioMockDTO;
 
     @BeforeEach
     void setUp() {
         mockMvc = MockMvcBuilders.standaloneSetup(usuarioController).build();
         objectMapper = new ObjectMapper();
-
-        usuarioMock = Usuario.builder()
-                .id(1L)
-                .nombre("Juan")
-                .correo("juan@test.com")
-                .tipoUsuario("cliente")
-                .build();
+        usuarioMockDTO = new UsuarioDTO(
+                1L,
+                "Juan",
+                "123456789",
+                "juan@test.com",
+                25,
+                "M",
+                "Dir",
+                "Dev",
+                "url",
+                "cliente"
+        );
     }
 
     @Test
     void crearUsuario() throws Exception {
-        // Agregado el campo obligatorio "cliente" al final de los argumentos del constructor del record
         UsuarioRequestDTO request = new UsuarioRequestDTO("Juan", 25, "M", "juan@test.com", "123456", "123456789", "url", "Dev", "Dir", "cliente");
-        when(usuarioService.crearUsuario(any(UsuarioRequestDTO.class))).thenReturn(usuarioMock);
+
+        // ✅ Mockito ahora devuelve el DTO
+        when(usuarioService.crearUsuario(any(UsuarioRequestDTO.class))).thenReturn(usuarioMockDTO);
 
         mockMvc.perform(post("/api/usuarios")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -72,7 +78,7 @@ class UsuarioControllerTest {
 
     @Test
     void listarUsuarios() throws Exception {
-        when(usuarioService.listar()).thenReturn(List.of(usuarioMock));
+        when(usuarioService.listar()).thenReturn(List.of(usuarioMockDTO));
 
         mockMvc.perform(get("/api/usuarios"))
                 .andExpect(status().isOk())
@@ -81,7 +87,7 @@ class UsuarioControllerTest {
 
     @Test
     void obtenerPorId() throws Exception {
-        when(usuarioService.obtenerPorId(1L)).thenReturn(usuarioMock);
+        when(usuarioService.obtenerPorId(1L)).thenReturn(usuarioMockDTO);
 
         mockMvc.perform(get("/api/usuarios/1"))
                 .andExpect(status().isOk())
@@ -144,9 +150,9 @@ class UsuarioControllerTest {
 
     @Test
     void actualizarUsuario() throws Exception {
-        // Agregado el campo obligatorio "cliente" al final
         UsuarioUpdateDTO update = new UsuarioUpdateDTO("Juan Modificado", 26, "M", "987654321", "url2", "Senior Dev", "Dir 2", "cliente");
-        when(usuarioService.actualizarUsuario(eq(1L), any(UsuarioUpdateDTO.class))).thenReturn(usuarioMock);
+
+        when(usuarioService.actualizarUsuario(eq(1L), any(UsuarioUpdateDTO.class))).thenReturn(usuarioMockDTO);
 
         mockMvc.perform(put("/api/usuarios/1")
                         .contentType(MediaType.APPLICATION_JSON)

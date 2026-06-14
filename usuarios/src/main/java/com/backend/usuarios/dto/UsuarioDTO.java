@@ -1,4 +1,5 @@
 package com.backend.usuarios.dto;
+import java.io.Serializable;
 
 public record UsuarioDTO(
         // DTO para exponer datos del usuario sin incluir la contraseña ni otros campos sensibles
@@ -12,4 +13,4 @@ public record UsuarioDTO(
         String ocupacion,
         String fotoUrl,
         String tipoUsuario
-) {}
+) implements Serializable {}

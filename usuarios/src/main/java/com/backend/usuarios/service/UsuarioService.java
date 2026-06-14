@@ -2,7 +2,9 @@ package com.backend.usuarios.service;
 
 import java.util.List;
 import java.util.UUID;
-
+import java.util.stream.Collectors;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -25,10 +27,11 @@ public class UsuarioService {
     private final JwtUtil jwtUtil;
 
     // =========================================================================
-    // 1. MÉTODOS PÚBLICOS (Registro y edición desde el perfil del cliente)
+    // 1. MÉTODOS PÚBLICOS
     // =========================================================================
 
-    public Usuario crearUsuario(UsuarioRequestDTO dto) {
+    @CacheEvict(value = "usuarios_lista", allEntries = true)
+    public UsuarioDTO crearUsuario(UsuarioRequestDTO dto) {
         Usuario usuario = Usuario.builder()
                 .nombre(dto.nombre())
                 .edad(dto.edad())
@@ -39,13 +42,14 @@ public class UsuarioService {
                 .ocupacion(dto.ocupacion())
                 .direccion(dto.direccion())
                 .password(passwordEncoder.encode(dto.password()))
-                .tipoUsuario("cliente") // 🔒 SEGURIDAD: Forzado siempre a cliente
+                .tipoUsuario("cliente")
                 .build();
 
-        return repository.save(usuario);
+        return convertirADTO(repository.save(usuario));
     }
 
-    public Usuario actualizarUsuario(Long id, UsuarioUpdateDTO dto) {
+    @CacheEvict(value = {"usuarios_lista", "usuario_detalle"}, allEntries = true)
+    public UsuarioDTO actualizarUsuario(Long id, UsuarioUpdateDTO dto) {
         Usuario usuario = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado con ID: " + id));
 
@@ -56,25 +60,30 @@ public class UsuarioService {
         usuario.setFotoUrl(dto.fotoUrl());
         usuario.setOcupacion(dto.ocupacion());
         usuario.setDireccion(dto.direccion());
-        
-        // 🔒 SEGURIDAD: NO actualizamos el rol aquí. Se queda el que ya tenía.
 
-        return repository.save(usuario);
+        return convertirADTO(repository.save(usuario));
     }
 
     // =========================================================================
-    // 2. MÉTODOS GENERALES (Login, Validaciones, Listados, etc.)
+    // 2. MÉTODOS GENERALES
     // =========================================================================
 
-    public List<Usuario> listar() {
-        return repository.findAll();
+    @Cacheable(value = "usuarios_lista")
+    public List<UsuarioDTO> listar() {
+        return repository.findAll()
+                .stream()
+                .map(this::convertirADTO)
+                .collect(Collectors.toList());
     }
 
-    public Usuario obtenerPorId(Long id) {
-        return repository.findById(id)
+    @Cacheable(value = "usuario_detalle", key = "#id")
+    public UsuarioDTO obtenerPorId(Long id) {
+        Usuario usuario = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado con ID: " + id));
+        return convertirADTO(usuario); // 🔄 Convertimos
     }
 
+    @CacheEvict(value = {"usuarios_lista", "usuario_detalle"}, allEntries = true)
     public void eliminarUsuario(Long id) {
         Usuario usuario = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado con ID: " + id));
@@ -94,26 +103,12 @@ public class UsuarioService {
         usuario.setSessionId(sessionId);
         repository.save(usuario);
 
-        // Generamos token inyectando el rol y demás datos
         String token = jwtUtil.generarToken(usuario.getCorreo(), sessionId, usuario.getId(), usuario.getTipoUsuario());
-
-        UsuarioDTO usuarioDTO = new UsuarioDTO(
-                usuario.getId(),
-                usuario.getNombre(),
-                usuario.getTelefono(),
-                usuario.getCorreo(),
-                usuario.getEdad(),
-                usuario.getGenero(),
-                usuario.getDireccion(),
-                usuario.getOcupacion(),
-                usuario.getFotoUrl(),
-                usuario.getTipoUsuario()
-        );
 
         return LoginResponseDTO.builder()
                 .token(token)
                 .sessionId(sessionId)
-                .usuario(usuarioDTO)
+                .usuario(convertirADTO(usuario))
                 .build();
     }
 
@@ -132,10 +127,11 @@ public class UsuarioService {
     }
 
     // =========================================================================
-    // 3. MÉTODOS EXCLUSIVOS PARA EL BFF (Llamados por un ADMIN autenticado)
+    // 3. MÉTODOS EXCLUSIVOS PARA EL BFF (ADMIN)
     // =========================================================================
 
-    public Usuario crearUsuarioAdmin(UsuarioRequestDTO dto) {
+    @CacheEvict(value = "usuarios_lista", allEntries = true)
+    public UsuarioDTO crearUsuarioAdmin(UsuarioRequestDTO dto) {
         Usuario usuario = Usuario.builder()
                 .nombre(dto.nombre())
                 .edad(dto.edad())
@@ -146,13 +142,14 @@ public class UsuarioService {
                 .ocupacion(dto.ocupacion())
                 .direccion(dto.direccion())
                 .password(passwordEncoder.encode(dto.password()))
-                .tipoUsuario(dto.tipoUsuario()) // 🔓 Permite usar el rol elegido por el admin (admin o cliente)
+                .tipoUsuario(dto.tipoUsuario())
                 .build();
 
-        return repository.save(usuario);
+        return convertirADTO(repository.save(usuario)); // 🔄 Convertimos
     }
 
-    public Usuario actualizarUsuarioPorAdmin(Long id, UsuarioUpdateDTO dto) {
+    @CacheEvict(value = {"usuarios_lista", "usuario_detalle"}, allEntries = true)
+    public UsuarioDTO actualizarUsuarioPorAdmin(Long id, UsuarioUpdateDTO dto) {
         Usuario usuario = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado con ID: " + id));
 
@@ -163,10 +160,27 @@ public class UsuarioService {
         usuario.setFotoUrl(dto.fotoUrl());
         usuario.setOcupacion(dto.ocupacion());
         usuario.setDireccion(dto.direccion());
-        
-        // 🔓 Permite modificar el rol al editar el perfil
-        usuario.setTipoUsuario(dto.tipoUsuario()); 
 
-        return repository.save(usuario);
+        usuario.setTipoUsuario(dto.tipoUsuario());
+
+        return convertirADTO(repository.save(usuario));
+    }
+
+    // =========================================================================
+    // METODO UTILITARIO PARA DTOs
+    // =========================================================================
+    private UsuarioDTO convertirADTO(Usuario usuario) {
+        return new UsuarioDTO(
+                usuario.getId(),
+                usuario.getNombre(),
+                usuario.getTelefono(),
+                usuario.getCorreo(),
+                usuario.getEdad(),
+                usuario.getGenero(),
+                usuario.getDireccion(),
+                usuario.getOcupacion(),
+                usuario.getFotoUrl(),
+                usuario.getTipoUsuario()
+        );
     }
 }

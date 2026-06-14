@@ -23,6 +23,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.backend.usuarios.dto.LoginResponseDTO;
+import com.backend.usuarios.dto.UsuarioDTO; // ✅ Nueva importación
 import com.backend.usuarios.dto.UsuarioRequestDTO;
 import com.backend.usuarios.dto.UsuarioUpdateDTO;
 import com.backend.usuarios.model.Usuario;
@@ -58,17 +59,16 @@ class UsuarioServiceTest {
 
     @Test
     void crearUsuario_Exitoso() {
-        // Se incluye el campo 'cliente' obligatorio al final del DTO
         UsuarioRequestDTO request = new UsuarioRequestDTO(
                 "Juan", 25, "M", "juan@test.com", "123456", "123456789", "url", "Dev", "Dir", "cliente"
         );
         when(passwordEncoder.encode(request.password())).thenReturn("encoded_password");
         when(repository.save(any(Usuario.class))).thenReturn(usuarioMock);
 
-        Usuario resultado = service.crearUsuario(request);
+        UsuarioDTO resultado = service.crearUsuario(request);
 
         assertNotNull(resultado);
-        assertEquals("Juan", resultado.getNombre());
+        assertEquals("Juan", resultado.nombre());
         verify(repository).save(any(Usuario.class));
     }
 
@@ -76,31 +76,29 @@ class UsuarioServiceTest {
     void listar_Exitoso() {
         when(repository.findAll()).thenReturn(List.of(usuarioMock));
 
-        List<Usuario> lista = service.listar();
+        List<UsuarioDTO> lista = service.listar();
 
         assertFalse(lista.isEmpty());
         assertEquals(1, lista.size());
-        assertEquals("Juan", lista.get(0).getNombre());
+        assertEquals("Juan", lista.get(0).nombre());
     }
 
     @Test
     void obtenerPorId_Exitoso() {
         when(repository.findById(1L)).thenReturn(Optional.of(usuarioMock));
 
-        Usuario resultado = service.obtenerPorId(1L);
+        UsuarioDTO resultado = service.obtenerPorId(1L);
 
         assertNotNull(resultado);
-        assertEquals(1L, resultado.getId());
+        assertEquals(1L, resultado.id());
     }
 
     @Test
     void obtenerPorId_NoEncontrado() {
         when(repository.findById(99L)).thenReturn(Optional.empty());
 
-        // Atrapamos la excepción en una variable para quitar el warning
         RuntimeException exception = assertThrows(RuntimeException.class, () -> service.obtenerPorId(99L));
-        
-        // Validamos que el mensaje sea exactamente el que programaste en tu servicio
+
         assertEquals("Usuario no encontrado con ID: 99", exception.getMessage());
     }
 
@@ -153,7 +151,7 @@ class UsuarioServiceTest {
         when(repository.findById(99L)).thenReturn(Optional.empty());
 
         RuntimeException exception = assertThrows(RuntimeException.class, () -> service.eliminarUsuario(99L));
-        
+
         assertEquals("Usuario no encontrado con ID: 99", exception.getMessage());
     }
 
@@ -183,7 +181,7 @@ class UsuarioServiceTest {
         when(repository.findById(1L)).thenReturn(Optional.of(usuarioMock));
         when(repository.save(any(Usuario.class))).thenReturn(usuarioMock);
 
-        Usuario resultado = service.actualizarUsuario(1L, updateDTO);
+        UsuarioDTO resultado = service.actualizarUsuario(1L, updateDTO);
 
         assertNotNull(resultado);
         verify(repository).save(usuarioMock);
@@ -195,7 +193,7 @@ class UsuarioServiceTest {
         when(repository.findById(99L)).thenReturn(Optional.empty());
 
         RuntimeException exception = assertThrows(RuntimeException.class, () -> service.actualizarUsuario(99L, updateDTO));
-        
+
         assertEquals("Usuario no encontrado con ID: 99", exception.getMessage());
     }
 
@@ -227,7 +225,7 @@ class UsuarioServiceTest {
     }
 
     // =========================================================================
-    // NUEVOS TESTS: MÉTODOS DE ADMINISTRADOR
+    // MÉTODOS DE ADMINISTRADOR
     // =========================================================================
 
     @Test
@@ -246,11 +244,11 @@ class UsuarioServiceTest {
         when(passwordEncoder.encode(request.password())).thenReturn("encoded_password");
         when(repository.save(any(Usuario.class))).thenReturn(adminMock);
 
-        Usuario resultado = service.crearUsuarioAdmin(request);
+        UsuarioDTO resultado = service.crearUsuarioAdmin(request);
 
         assertNotNull(resultado);
-        assertEquals("admin", resultado.getTipoUsuario());
-        assertEquals("Admin Especial", resultado.getNombre());
+        assertEquals("admin", resultado.tipoUsuario());
+        assertEquals("Admin Especial", resultado.nombre());
         verify(repository).save(any(Usuario.class));
     }
 
@@ -260,10 +258,9 @@ class UsuarioServiceTest {
         when(repository.findById(1L)).thenReturn(Optional.of(usuarioMock));
         when(repository.save(any(Usuario.class))).thenReturn(usuarioMock);
 
-        Usuario resultado = service.actualizarUsuarioPorAdmin(1L, updateDTO);
+        UsuarioDTO resultado = service.actualizarUsuarioPorAdmin(1L, updateDTO);
 
         assertNotNull(resultado);
-        // Validamos que se asigne el rol que el admin seleccionó (en este caso lo promovió a 'admin')
         assertEquals("admin", usuarioMock.getTipoUsuario());
         verify(repository).save(usuarioMock);
     }

@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.backend.usuarios.dto.UsuarioRequestDTO;
 import com.backend.usuarios.dto.UsuarioUpdateDTO;
-import com.backend.usuarios.model.Usuario;
+import com.backend.usuarios.dto.UsuarioDTO;
 import com.backend.usuarios.service.UsuarioService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -29,13 +29,13 @@ public class AdminInternalController {
 
     @Operation(summary = "Crear usuario con rol a elección (Solo Admin)")
     @PostMapping
-    public ResponseEntity<Usuario> crearPorAdmin(@Valid @RequestBody UsuarioRequestDTO dto) {
+    public ResponseEntity<UsuarioDTO> crearPorAdmin(@Valid @RequestBody UsuarioRequestDTO dto) {
         return new ResponseEntity<>(service.crearUsuarioAdmin(dto), HttpStatus.CREATED);
     }
 
     @Operation(summary = "Actualización total de usuario incluyendo rol (Solo Admin)")
     @PutMapping("/{id}")
-    public ResponseEntity<Usuario> actualizarPorAdmin(@PathVariable Long id, @Valid @RequestBody UsuarioUpdateDTO dto) {
+    public ResponseEntity<UsuarioDTO> actualizarPorAdmin(@PathVariable Long id, @Valid @RequestBody UsuarioUpdateDTO dto) {
         return ResponseEntity.ok(service.actualizarUsuarioPorAdmin(id, dto));
     }
 }

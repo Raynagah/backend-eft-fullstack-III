@@ -1,8 +1,8 @@
 package com.backend.usuarios.controller;
 
+import com.backend.usuarios.dto.UsuarioDTO;
 import com.backend.usuarios.dto.UsuarioRequestDTO;
 import com.backend.usuarios.dto.UsuarioUpdateDTO;
-import com.backend.usuarios.model.Usuario;
 import com.backend.usuarios.service.UsuarioService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -26,29 +26,28 @@ public class UsuarioController {
     // Crear usuario
     @Operation(summary = "Crear usuario")
     @PostMapping
-    public ResponseEntity<Usuario> crear(@Valid @RequestBody UsuarioRequestDTO dto) {
+    public ResponseEntity<UsuarioDTO> crear(@Valid @RequestBody UsuarioRequestDTO dto) {
         return new ResponseEntity<>(service.crearUsuario(dto), HttpStatus.CREATED);
     }
 
     // Listar
     @Operation(summary = "Listar usuarios")
     @GetMapping
-    public ResponseEntity<List<Usuario>> listar() {
+    public ResponseEntity<List<UsuarioDTO>> listar() {
         return ResponseEntity.ok(service.listar());
     }
 
     // Obtener por ID
     @GetMapping("/{id}")
     @Operation(summary = "Obtener usuario por ID")
-    public ResponseEntity<Usuario> obtener(@PathVariable Long id) {
+    public ResponseEntity<UsuarioDTO> obtener(@PathVariable Long id) {
         return ResponseEntity.ok(service.obtenerPorId(id));
     }
 
-    //Login con JWT que hashea la contraseña y retorna un token, el usuario y el sessionId
+    // Login con JWT que hashea la contraseña y retorna un token, el usuario y el sessionId
     @Operation(summary = "Login de usuario (retorna JWT, User y SessionId)")
     @PostMapping("/login")
     public ResponseEntity<LoginResponseDTO> login(@RequestBody LoginRequestDTO dto) {
-        // Asumimos que ajustaremos el service para que retorne el objeto completo
         return ResponseEntity.ok(service.login(dto.correo(), dto.password()));
     }
 
@@ -78,8 +77,7 @@ public class UsuarioController {
     // Actualizar perfil de usuario (sin cambiar correo ni contraseña)
     @Operation(summary = "Actualizar perfil de usuario", description = "Permite modificar datos personales. No permite cambiar correo ni contraseña.")
     @PutMapping("/{id}")
-    public ResponseEntity<Usuario> actualizar(@PathVariable Long id, @Valid @RequestBody UsuarioUpdateDTO dto) {
+    public ResponseEntity<UsuarioDTO> actualizar(@PathVariable Long id, @Valid @RequestBody UsuarioUpdateDTO dto) {
         return ResponseEntity.ok(service.actualizarUsuario(id, dto));
     }
-
 }
