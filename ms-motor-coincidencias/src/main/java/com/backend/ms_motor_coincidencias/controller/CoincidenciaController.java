@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -35,38 +36,34 @@ public class CoincidenciaController {
     private final NotificacionesClient notificacionesClient;
     private final CoincidenciaRepository coincidenciaRepository;
 
-    @Operation(summary = "Buscar coincidencias para un reporte", 
-               description = "Compara un reporte contra la base de datos, guarda el match y notifica si es > 85%")
-    @ApiResponse(responseCode = "200", description = "Lista de coincidencias encontradas")
+    @Operation(summary = "Buscar coincidencias para UI", description = "Solo calcula para mostrar en pantalla, NO notifica.")
     @GetMapping("/buscar/{idReporte}")
     public ResponseEntity<List<ResultadoMatchDTO>> buscarMatches(@PathVariable Long idReporte) {
-
-        // --- 1. VALIDACIÓN DE ENTRADA ---
-        if (idReporte == null || idReporte <= 0) {
-            throw new BadRequestException("El ID del reporte debe ser un número positivo mayor a 0.");
-        }
-
-        // --- 2. OBTENCIÓN DE DATOS Y VALIDACIÓN DE EXISTENCIA ---
-        ResultadoMatchDTO mascotaOriginal = mascotasClient.obtenerMascotaPorId(idReporte);
+        if (idReporte == null || idReporte <= 0) throw new BadRequestException("ID inválido.");
         
-        if (mascotaOriginal == null || mascotaOriginal.getTipoReporte() == null) {
-            throw new ResourceNotFoundException("No se encontró ningún reporte válido con el ID: " + idReporte);
-        }
+        ResultadoMatchDTO mascotaOriginal = mascotasClient.obtenerMascotaPorId(idReporte);
+        if (mascotaOriginal == null) throw new ResourceNotFoundException("No se encontró reporte: " + idReporte);
 
-        List<ResultadoMatchDTO> todasLasMascotas = mascotasClient.obtenerTodasLasMascotas();
-
-        // --- 3. FILTRADO LÓGICO ---
+        List<ResultadoMatchDTO> todas = mascotasClient.obtenerTodasLasMascotas();
         String tipoBuscado = mascotaOriginal.getTipoReporte().equalsIgnoreCase("PERDIDA") ? "ENCONTRADA" : "PERDIDA";
 
-        List<ResultadoMatchDTO> candidatas = todasLasMascotas.stream()
+        List<ResultadoMatchDTO> candidatas = todas.stream()
                 .filter(m -> m.getTipoReporte() != null && m.getTipoReporte().equalsIgnoreCase(tipoBuscado))
                 .filter(m -> m.getId() != null && !m.getId().equals(idReporte))
                 .collect(Collectors.toList());
 
-        // --- 4. CÁLCULO DE PORCENTAJES ---
-        List<ResultadoMatchDTO> resultados = coincidenciaService.evaluarCoincidencias(mascotaOriginal, candidatas);
+        // SOLO calcula y retorna, sin guardar en BD ni enviar correos
+        return ResponseEntity.ok(coincidenciaService.evaluarCoincidencias(mascotaOriginal, candidatas));
+    }
 
-        // --- 5. PERSISTENCIA Y PREPARACIÓN DE ALERTAS ---
+    @Operation(summary = "Procesar y Notificar", description = "Calcula, guarda y envía correos. Llamar al crear reporte.")
+    @PostMapping("/procesar/{idReporte}")
+    public ResponseEntity<String> procesarYNotificarMatches(@PathVariable Long idReporte) {
+        // 1. Usamos la misma lógica de búsqueda de arriba
+        List<ResultadoMatchDTO> resultados = buscarMatches(idReporte).getBody();
+        if (resultados == null || resultados.isEmpty()) return ResponseEntity.ok("No hay coincidencias.");
+
+        // 2. Preparamos alertas y persistimos
         List<NotificacionMatchDTO> alertas = resultados.stream()
                 .filter(r -> r.getPorcentajeSimilitud() >= 85.0)
                 .map(r -> {
@@ -84,21 +81,17 @@ public class CoincidenciaController {
                     dto.setTitulo("¡Posible coincidencia encontrada!");
                     dto.setMensaje("Hay un match del " + r.getPorcentajeSimilitud() + "% con un reporte.");
                     dto.setEmailUsuario(r.getEmailContacto());
-
                     return dto;
-                })
-                .collect(Collectors.toList());
+                }).collect(Collectors.toList());
 
-        // --- 6. ENVÍO DE NOTIFICACIONES ---
+        // 3. Enviamos notificaciones de forma definitiva
         if (!alertas.isEmpty()) {
             try {
                 notificacionesClient.enviarNotificaciones(alertas);
-                System.out.println("Éxito: Se enviaron e insertaron " + alertas.size() + " registros.");
             } catch (Exception e) {
                 System.err.println("Error de comunicación: " + e.getMessage());
             }
         }
-
-        return ResponseEntity.ok(resultados);
+        return ResponseEntity.ok("Procesamiento completado. " + alertas.size() + " notificaciones enviadas.");
     }
 }
