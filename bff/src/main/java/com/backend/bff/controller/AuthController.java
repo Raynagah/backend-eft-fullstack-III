@@ -26,12 +26,18 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
         try {
-            // Si todoo sale bien, devolvemos el token y el 200 OK
+            // Si todo sale bien, devolvemos el token y el 200 OK
             return ResponseEntity.ok(authService.autenticar(request));
         } catch (FeignException e) {
-            // Si el ms-usuarios lanza un error (404, 401, etc.),
-            // extraemos su mensaje original y se lo pasamos al frontend
-            return ResponseEntity.status(e.status()).body(e.contentUTF8());
+            int status = e.status();
+            // Si Feign no puede determinar el estatus (-1), lo forzamos a 500
+            if (status < 100 || status > 599) {
+                status = 500;
+            }
+            // Retorna el estatus exacto (401) enviado por ms-usuarios
+            return ResponseEntity.status(status).body(e.contentUTF8());
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Error inesperado en el BFF: " + e.getMessage());
         }
     }
 

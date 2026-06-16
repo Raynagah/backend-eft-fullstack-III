@@ -54,4 +54,12 @@ public class BffUsuarioService {
     public UsuarioDTO actualizarUsuarioPorAdmin(Long id, UsuarioActualizacionDTO dto) {
         return usuarioClient.actualizarUsuarioPorAdmin(id, dto);
     }
+
+    public List<UsuarioDTO> listarTodos() {
+        return usuarioClient.listarUsuarios();
+    }
+
+    public void eliminarUsuario(Long id) {
+        usuarioClient.eliminarUsuario(id);
+    }
 }

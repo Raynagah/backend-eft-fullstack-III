@@ -7,6 +7,7 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.backend.usuarios.dto.LoginResponseDTO;
 import com.backend.usuarios.dto.UsuarioDTO;
@@ -15,6 +16,8 @@ import com.backend.usuarios.dto.UsuarioUpdateDTO;
 import com.backend.usuarios.model.Usuario;
 import com.backend.usuarios.repository.UsuarioRepository;
 import com.backend.usuarios.security.JwtUtil;
+
+import org.springframework.http.HttpStatus;
 
 import lombok.RequiredArgsConstructor;
 
@@ -92,11 +95,13 @@ public class UsuarioService {
     }
 
     public LoginResponseDTO login(String correo, String password) {
+        // 1. Usamos ResponseStatusException con HttpStatus.UNAUTHORIZED (401)
         Usuario usuario = repository.findByCorreo(correo)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Credenciales incorrectas"));
 
+        // 2. Misma excepción para la contraseña
         if (!passwordEncoder.matches(password, usuario.getPassword())) {
-            throw new RuntimeException("Credenciales incorrectas");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Credenciales incorrectas");
         }
 
         String sessionId = UUID.randomUUID().toString();

@@ -47,8 +47,17 @@ public class UsuarioController {
     // Login con JWT que hashea la contraseña y retorna un token, el usuario y el sessionId
     @Operation(summary = "Login de usuario (retorna JWT, User y SessionId)")
     @PostMapping("/login")
-    public ResponseEntity<LoginResponseDTO> login(@RequestBody LoginRequestDTO dto) {
-        return ResponseEntity.ok(service.login(dto.correo(), dto.password()));
+    public ResponseEntity<?> login(@RequestBody LoginRequestDTO dto) {
+        try {
+            return ResponseEntity.ok(service.login(dto.correo(), dto.password()));
+        } catch (org.springframework.web.server.ResponseStatusException e) {
+            // Captura el 401 del Service y lo envía explícitamente como HTTP 401
+            return ResponseEntity.status(e.getStatusCode()).body(e.getReason());
+        } catch (Exception e) {
+            // Captura cualquier otro error (ej. Base de datos caída o error de encriptación)
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error interno en ms-usuarios: " + e.getMessage());
+        }
     }
 
     // Endpoint para validar sesión activa, recibe ID de usuario y sessionId, retorna booleano

@@ -29,6 +29,7 @@ public class BffMascotaService {
                         .estado(m.getSagaStatus())
                         .tipoReporte(m.getTipoReporte())
                         .fotografiaUrl(m.getFotografiaUrl())
+                        .fechaReporte(m.getFechaReporte())
                         .build())
                 .collect(Collectors.toList());
     }
