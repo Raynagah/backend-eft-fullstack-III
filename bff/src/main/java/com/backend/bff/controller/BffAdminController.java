@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.backend.bff.dto.UsuarioActualizacionDTO;
+import com.backend.bff.dto.UsuarioAdminDTO;
 import com.backend.bff.dto.UsuarioDTO;
 import com.backend.bff.service.BffUsuarioService;
 
@@ -91,5 +92,11 @@ public class BffAdminController {
         } catch (FeignException e) {
             return ResponseEntity.status(e.status()).body(e.contentUTF8());
         }
+    }
+
+    @GetMapping("/admin/listar")
+    public ResponseEntity<List<UsuarioAdminDTO>> listarParaAdmin() {
+        // LLAMA AL MÉTODO NUEVO, NO AL DE USUARIOCLIENT DIRECTAMENTE
+        return ResponseEntity.ok(bffUsuarioService.listarUsuariosParaAdmin());
     }
 }
