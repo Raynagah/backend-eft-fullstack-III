@@ -26,6 +26,10 @@ spring:
               uri: lb://ms-usuarios
               predicates:
                 - Path=/api/usuarios/**
+            - id: ms-usuarios-internal
+              uri: lb://ms-usuarios
+              predicates:
+                - Path=/internal/admin/usuarios/**
             - id: ms-notificaciones 
               uri: lb://ms-notificaciones 
               predicates:

@@ -1,12 +1,13 @@
 package com.backend.bff.security;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.security.Keys;
+import java.security.Key;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.security.Key;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
 
 @Service
 public class JwtService {
@@ -39,5 +40,16 @@ public class JwtService {
                 .parseClaimsJws(token)
                 .getBody()
                 .getSubject(); // Generalmente el correo se guarda en el Subject
+    }
+
+    public String extractRol(String token) {
+    Claims claims = Jwts.parserBuilder()
+            .setSigningKey(getSigningKey())
+            .build()
+            .parseClaimsJws(token)
+            .getBody();
+
+    // Extraemos el claim "rol" que guardamos en el microservicio de usuarios
+    return claims.get("rol", String.class); 
     }
 }

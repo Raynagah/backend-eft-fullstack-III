@@ -32,7 +32,7 @@ public class NotificacionController {
 
     // Endpoint para marcar una notificación como leída, cambiando su estado a true en la variable 'leido'  
     @Operation(summary = "Marcar notificación como leída", description = "Cambia el estado de la variable 'leido' a true.")
-    @PatchMapping("/{id}/leer")
+    @PutMapping("/{id}/leer")
     public ResponseEntity<Notificacion> marcarLeida(@PathVariable Long id) {
         return ResponseEntity.ok(notificacionService.marcarComoLeida(id));
     }

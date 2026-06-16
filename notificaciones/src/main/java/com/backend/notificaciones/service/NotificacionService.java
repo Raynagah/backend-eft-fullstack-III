@@ -1,26 +1,30 @@
 package com.backend.notificaciones.service;
 
 import com.backend.notificaciones.client.ReporteClient;
+import com.backend.notificaciones.config.RabbitMQConfig;
+import com.backend.notificaciones.dto.MascotaReportadaEvent;
 import com.backend.notificaciones.dto.NotificacionMatchDTO;
 import com.backend.notificaciones.model.Notificacion;
 import com.backend.notificaciones.repository.NotificacionRepository;
 import com.backend.notificaciones.dto.ReporteRequestDTO;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Service;
+
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class NotificacionService {
-    // Servicio principal para gestionar las notificaciones, incluyendo la lógica de negocio para procesar 
-    // coincidencias detectadas por el motor de IA, interactuar con el microservicio de reportes y manejar 
+    // Servicio principal para gestionar las notificaciones, incluyendo la lógica de negocio para procesar
+    // coincidencias detectadas por el motor de IA, interactuar con el microservicio de reportes y manejar
     // las operaciones CRUD de las notificaciones
 
     private final NotificacionRepository notificacionRepository;
     private final ReporteClient reporteClient; // Cliente Feign inyectado
 
-    // Método para procesar las coincidencias recibidas del motor de IA, creando notificaciones 
+    // Metodo para procesar las coincidencias recibidas del motor de IA, creando notificaciones
     // solo si el porcentaje de similitud es mayor o igual al 85%
     public void procesarNotificaciones(List<NotificacionMatchDTO> coincidencias) {
         System.out.println("Recibidas " + coincidencias.size() + " posibles coincidencias");
@@ -35,7 +39,7 @@ public class NotificacionService {
         });
     }
 
-    // Método privado para guardar la notificación en la base de datos y realizar la llamada Feign para obtener los datos del reporte original
+    // Metodo privado para guardar la notificación en la base de datos y realizar la llamada Feign para obtener los datos del reporte original
     private void guardarYNotificar(NotificacionMatchDTO dto) {
         // LLAMADA FEIGN: Obtenemos los datos del reporte original utilizando el ID del reporte que viene en el DTO de coincidencia
         ReporteRequestDTO reporteOriginal = reporteClient.obtenerReportePorId(dto.getReporteId());
@@ -57,12 +61,12 @@ public class NotificacionService {
         System.out.println("NOTIFICACIÓN CREADA para Usuario ID: " + reporteOriginal.getUsuarioId());
     }
 
-    // Método para obtener todas las notificaciones de un usuario específico, utilizando su ID como parámetro de búsqueda
+    // Metodo para obtener todas las notificaciones de un usuario específico, utilizando su ID como parámetro de búsqueda
     public List<Notificacion> obtenerPorUsuario(Long usuarioId) {
         return notificacionRepository.findByUsuarioIdOrderByFechaCreacionDesc(usuarioId);
     }
 
-    // Método para eliminar una notificación específica por su ID, eliminándola de la base de datos
+    // Metodo para eliminar una notificación específica por su ID, eliminándola de la base de datos
     public void eliminarNotificacion(Long id) {
         if (!notificacionRepository.existsById(id)) {
             throw new RuntimeException("La notificación con ID " + id + " no existe.");
@@ -70,12 +74,12 @@ public class NotificacionService {
         notificacionRepository.deleteById(id);
     }
 
-    // Método para obtener todas las notificaciones, principalmente para pruebas y administración, sin filtros específicos
+    // Metodo para obtener todas las notificaciones, principalmente para pruebas y administración, sin filtros específicos
     public List<Notificacion> obtenerTodas() {
         return notificacionRepository.findAll();
     }
 
-    // Método para marcar una notificación como leída, cambiando su estado a true en la variable 'leido'
+    // Metodo para marcar una notificación como leída, cambiando su estado a true en la variable 'leido'
     @Transactional
     public Notificacion marcarComoLeida(Long id) {
         Notificacion notificacion = notificacionRepository.findById(id)
@@ -83,5 +87,20 @@ public class NotificacionService {
 
         notificacion.setLeido(true);
         return notificacionRepository.save(notificacion);
+    }
+
+    // LISTENER DE RABBITMQ - RECIBE EVENTOS ASÍNCRONOS
+    @RabbitListener(queues = RabbitMQConfig.QUEUE_NOTIFICACIONES)
+    public void procesarReporteMascotaRabbitMQ(MascotaReportadaEvent evento) {
+        System.out.println("=========================================================");
+        System.out.println("¡RABBITMQ: NUEVO REPORTE DE MASCOTA RECIBIDO!");
+        System.out.println("Procesando evento para: " + evento.getNombreMascota());
+        System.out.println("ID de Mascota: " + evento.getMascotaId());
+        System.out.println("ID de Usuario: " + evento.getUsuarioId());
+        System.out.println("Tipo de Reporte: " + evento.getTipoReporte());
+        System.out.println("=========================================================");
+
+        // Aquí puedes reutilizar la lógica para crear una notificación genérica
+        // o guardar un registro si lo consideras necesario para el sistema de alertas.
     }
 }

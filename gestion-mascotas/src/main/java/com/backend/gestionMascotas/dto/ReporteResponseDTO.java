@@ -1,9 +1,11 @@
 package com.backend.gestionMascotas.dto;
 
 import java.time.LocalDateTime;
+import java.io.Serializable;
 
 public record ReporteResponseDTO(
         Long id,
+        Long usuarioId,
         String tipoReporte,
         String nombre,
         String especie,
@@ -12,10 +14,11 @@ public record ReporteResponseDTO(
         String tamano,
         String nombreContacto,
         String telefonoContacto,
+        String emailContacto,
         String fotografiaUrl,
         Double latitud,
         Double longitud,
         LocalDateTime fechaReporte,
         String sagaStatus
-        // Nota: Omitimos usuarioId por seguridad x.x'
-) {}
+
+) implements Serializable {}

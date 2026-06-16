@@ -49,14 +49,16 @@ class CoincidenciaControllerTest {
     private ResultadoMatchDTO candidataEncontrada;
 
     @BeforeEach
-    @SuppressWarnings("unused") 
+    @SuppressWarnings("unused")
     void setUp() {
         reporteOriginal = new ResultadoMatchDTO();
-        reporteOriginal.setReporteId(1L);
+        // 💡 CORRECCIÓN: Se cambió setReporteId por setId
+        reporteOriginal.setId(1L);
         reporteOriginal.setTipoReporte("PERDIDA");
 
         candidataEncontrada = new ResultadoMatchDTO();
-        candidataEncontrada.setReporteId(2L);
+        // 💡 CORRECCIÓN: Se cambió setReporteId por setId
+        candidataEncontrada.setId(2L);
         candidataEncontrada.setTipoReporte("ENCONTRADA");
         candidataEncontrada.setEmailContacto("contacto@test.com");
         candidataEncontrada.setFotografiaUrl("url-foto");
@@ -79,7 +81,8 @@ class CoincidenciaControllerTest {
         ResourceNotFoundException ex1 = assertThrows(ResourceNotFoundException.class, () -> controller.buscarMatches(99L));
 
         ResultadoMatchDTO sinTipo = new ResultadoMatchDTO();
-        sinTipo.setReporteId(100L);
+        // 💡 CORRECCIÓN: Se cambió setReporteId por setId
+        sinTipo.setId(100L);
         when(mascotasClient.obtenerMascotaPorId(100L)).thenReturn(sinTipo);
         ResourceNotFoundException ex2 = assertThrows(ResourceNotFoundException.class, () -> controller.buscarMatches(100L));
 
@@ -92,7 +95,7 @@ class CoincidenciaControllerTest {
         // Agregamos elementos incompletos para forzar las ramas nulas de los .filter() del Stream
         ResultadoMatchDTO candidataMala1 = new ResultadoMatchDTO(); // Tipo nulo
         ResultadoMatchDTO candidataMala2 = new ResultadoMatchDTO();
-        candidataMala2.setTipoReporte("ENCONTRADA"); // ReporteId nulo
+        candidataMala2.setTipoReporte("ENCONTRADA"); // id nulo
 
         when(mascotasClient.obtenerMascotaPorId(1L)).thenReturn(reporteOriginal);
         when(mascotasClient.obtenerTodasLasMascotas()).thenReturn(

@@ -25,4 +25,5 @@ public class MascotaCardDTO {
 
     private String tipoReporte;
     private String fotografiaUrl;
+    private String fechaReporte;
 }

@@ -29,6 +29,7 @@ public class BffMascotaService {
                         .estado(m.getSagaStatus())
                         .tipoReporte(m.getTipoReporte())
                         .fotografiaUrl(m.getFotografiaUrl())
+                        .fechaReporte(m.getFechaReporte())
                         .build())
                 .collect(Collectors.toList());
     }
@@ -84,41 +85,72 @@ public class BffMascotaService {
             //System.err.println("BFF Info: ms-usuarios falló. Usando contacto base de la mascota.");
         }
 
-        // 4. Integración con Motor de Coincidencias
+        // 4. Integración con Motor de Coincidencias (Enriquecimiento de Coincidencias)
         try {
-            detalle.setPosiblesCoincidencias(coincidenciasClient.obtenerCoincidenciasPorMascota(id));
+            // A. Obtenemos la lista básica de coincidencias desde el microservicio
+            List<CoincidenciaDTO> coincidencias = coincidenciasClient.obtenerCoincidenciasPorMascota(id);
+            
+            // B. Recorremos cada coincidencia para averiguar su tipo de reporte real
+            if (coincidencias != null && !coincidencias.isEmpty()) {
+                for (CoincidenciaDTO coincidencia : coincidencias) {
+                    try {
+                        // Usamos el cliente de mascotas para traer los datos del reporte clon/match
+                        var datosMascotaMatch = mascotaClient.obtenerPorId(coincidencia.getMascotaId());
+                        if (datosMascotaMatch != null) {
+                            // Seteamos el tipo de reporte ("PERDIDA" o "ENCONTRADA") en el DTO
+                            coincidencia.setTipoReporte(datosMascotaMatch.getTipoReporte());
+                        }
+                    } catch (Exception ex) {
+                        System.err.println("BFF Alerta: No se pudo enriquecer el tipoReporte para la coincidencia ID " 
+                                + coincidencia.getMascotaId() + ". Detalle: " + ex.getMessage());
+                    }
+                }
+            }
+            
+            // C. Asignamos la lista ya enriquecida al detalle completo
+            detalle.setPosiblesCoincidencias(coincidencias);
+            
         } catch (Exception e) {
             detalle.setPosiblesCoincidencias(new ArrayList<>());
-            //System.err.println("BFF Error: ms-motor-coincidencias no respondió");
-            // Esto dirá si es un 404 (Ruta mal), 500 (Error en el micro) o Connection Refused (Puerto mal)
-            System.err.println("ERROR REAL EN COINDICENCIAS: " + e.getMessage());
+            System.err.println("ERROR REAL EN COINCIDENCIAS: " + e.getMessage());
         }
 
         return detalle;
     }
 
     public Object crearNuevoReporte(WebReporteRequestDTO dto) {
-        // Ya que dto.getNombre() sí existe, logueamos mejor la información
         String nombreMascota = (dto.getNombre() != null && !dto.getNombre().isBlank()) ? dto.getNombre() : "Sin nombre";
         System.out.println("BFF: Recibiendo reporte para: " + nombreMascota + " (" + dto.getEspecie() + " " + dto.getRaza() + ")");
 
         // 1. Crear la mascota en el microservicio core
         Object response = mascotaClient.crear(dto);
 
-        // 2. Disparar notificación asíncrona (Fire and forget)
+        // 2. Extraer el ID de la mascota recién creada (Feign devuelve Object como Map usualmente)
+        Long nuevaMascotaId = null;
         try {
-            // Mejoramos el mensaje de alerta para incluir el nombre si existe
-            String mensaje = "Se ha reportado: " + dto.getEspecie() + " " + dto.getRaza();
-            if (dto.getNombre() != null && !dto.getNombre().isBlank()) {
-                mensaje += " llamado " + dto.getNombre();
+            if (response instanceof java.util.Map) {
+                nuevaMascotaId = Long.valueOf(((java.util.Map<?, ?>) response).get("id").toString());
             }
-            notificacionClient.enviarAlertaMascota(new NotificacionRequestDTO(dto.getUsuarioId(), mensaje));
         } catch (Exception e) {
-            //System.err.println("BFF Error: No se pudo enviar la notificación, pero el reporte fue creado.");
-            // Esto te dirá si es un 404 (Ruta mal), 500 (Error en el micro) o Connection Refused (Puerto mal)
-            System.err.println("ERROR REAL EN NOTIFICACIONES: " + e.getMessage());
+            System.err.println("No se pudo extraer el ID de la respuesta.");
+        }
+
+        // 3. Llamar al motor para que evalúe y notifique de verdad (solo si corresponde)
+        if (nuevaMascotaId != null) {
+            try {
+                // NOTA: Asegúrate de agregar el método @PostMapping("/api/coincidencias/procesar/{idReporte}") 
+                // a tu interface CoincidenciasClient antes de ejecutar esto.
+                coincidenciasClient.procesarCoincidencias(nuevaMascotaId);
+            } catch (Exception e) {
+                System.err.println("ERROR REAL EN COINCIDENCIAS (AL CREAR): " + e.getMessage());
+            }
         }
 
         return response;
+    }
+
+    public void eliminarReporte(Long id) {
+    System.out.println("BFF: Solicitando eliminación del reporte ID: " + id);
+    mascotaClient.eliminar(id);
     }
 }

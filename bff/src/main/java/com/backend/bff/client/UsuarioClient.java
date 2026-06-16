@@ -1,11 +1,14 @@
 package com.backend.bff.client;
 
+import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.web.bind.annotation.*;
+
 import com.backend.bff.dto.LoginRequest;
 import com.backend.bff.dto.LoginResponse;
 import com.backend.bff.dto.UsuarioActualizacionDTO;
 import com.backend.bff.dto.UsuarioDTO;
-import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @FeignClient(name = "ms-usuarios", url = "${services.usuarios.url}")
 public interface UsuarioClient {
@@ -27,4 +30,16 @@ public interface UsuarioClient {
 
     @PostMapping("/api/usuarios")
     UsuarioDTO registrar(@RequestBody UsuarioDTO dto);
+
+    @PostMapping("/internal/admin/usuarios")
+    UsuarioDTO registrarAdmin(@RequestBody UsuarioDTO dto);
+
+    @PutMapping("/internal/admin/usuarios/{id}")
+    UsuarioDTO actualizarUsuarioPorAdmin(@PathVariable("id") Long id, @RequestBody UsuarioActualizacionDTO dto);
+
+    @GetMapping("/api/usuarios")
+    List<UsuarioDTO> listarUsuarios();
+
+    @DeleteMapping("/api/usuarios/{id}")
+    String eliminarUsuario(@PathVariable("id") Long id);
 }

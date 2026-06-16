@@ -2,6 +2,7 @@ package com.backend.bff.controller;
 
 import com.backend.bff.dto.MascotaCardDTO;
 import com.backend.bff.dto.UsuarioActualizacionDTO;
+import com.backend.bff.dto.UsuarioAdminDTO;
 import com.backend.bff.dto.UsuarioDTO;
 import com.backend.bff.service.BffUsuarioService;
 import feign.FeignException;
@@ -51,6 +52,11 @@ public class BffUsuarioController {
             // capturamos el error de Feign y lo enviamos al frontend
             return ResponseEntity.status(e.status()).body(e.contentUTF8());
         }
+    }
+
+    @GetMapping("/admin/listar")
+    public ResponseEntity<List<UsuarioAdminDTO>> listarParaAdmin() {
+        return ResponseEntity.ok(bffUsuarioService.listarUsuariosParaAdmin());
     }
 
 }

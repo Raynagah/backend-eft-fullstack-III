@@ -12,10 +12,8 @@ import com.backend.ms_motor_coincidencias.exception.BadRequestException;
 @Service
 public class CoincidenciaService {
 
-    // Metodo principal que evalúa una mascota perdida contra una lista de encontradas
     public List<ResultadoMatchDTO> evaluarCoincidencias(ResultadoMatchDTO perdida, List<ResultadoMatchDTO> candidatas) {
-        
-        // --- VALIDACIONES DE ENTRADA ---
+
         if (perdida == null) {
             throw new BadRequestException("El objeto de mascota original no puede ser nulo.");
         }
@@ -26,50 +24,56 @@ public class CoincidenciaService {
         List<ResultadoMatchDTO> matches = new ArrayList<>();
 
         for (ResultadoMatchDTO candidata : candidatas) {
-            double porcentaje = calcularPorcentaje(perdida, candidata);
+            // metodo que calcula el % y además arma el texto
+            calcularPorcentajeYDescripcion(perdida, candidata);
 
-            // Solo devolvemos coincidencias que tengan al menos algo en común (ej. > 0%)
-            if (porcentaje > 0.0) {
-                candidata.setPorcentajeSimilitud(porcentaje);
+            if (candidata.getPorcentajeSimilitud() > 0.0) {
                 matches.add(candidata);
             }
         }
 
-        // Ordenamos la lista de mayor a menor porcentaje (los mejores matches primero)
         matches.sort(Comparator.comparing(ResultadoMatchDTO::getPorcentajeSimilitud).reversed());
         return matches;
     }
 
-    // El Algoritmo Matemático de Pesos
-    private double calcularPorcentaje(ResultadoMatchDTO perdida, ResultadoMatchDTO encontrada) {
+    // metodo que unifica el cálculo y la generación de la descripción
+    private void calcularPorcentajeYDescripcion(ResultadoMatchDTO perdida, ResultadoMatchDTO encontrada) {
         double puntaje = 0.0;
+        List<String> atributosCoincidentes = new ArrayList<>();
 
-        // 1. Si la especie no es la misma, es 0% (un gato no es un perro)
+        // 1. Especie (Filtro base)
         if (!sonIguales(perdida.getEspecie(), encontrada.getEspecie())) {
-            return 0.0;
+            encontrada.setPorcentajeSimilitud(0.0);
+            return;
         }
-
-        // Si pasamos el filtro de especie, ya partimos con una base, pero evaluaremos el resto sobre 100%
+        atributosCoincidentes.add("Especie");
 
         // 2. Raza (Vale 30%)
         if (sonIguales(perdida.getRaza(), encontrada.getRaza())) {
             puntaje += 30.0;
+            atributosCoincidentes.add("Raza");
         }
 
         // 3. Tamaño (Vale 30%)
         if (sonIguales(perdida.getTamano(), encontrada.getTamano())) {
             puntaje += 30.0;
+            atributosCoincidentes.add("Tamaño");
         }
 
-        // 4. Color (Vale 40% - Búsqueda más flexible)
+        // 4. Color (Vale 40%)
         if (coincidenciaParcial(perdida.getColor(), encontrada.getColor())) {
             puntaje += 40.0;
+            atributosCoincidentes.add("Color");
         }
 
-        return puntaje;
+        encontrada.setPorcentajeSimilitud(puntaje);
+
+        // 💡 Asignamos la descripción si hubo coincidencias
+        if (puntaje > 0.0) {
+            encontrada.setDescripcionMatch("Alta coincidencia en: " + String.join(", ", atributosCoincidentes));
+        }
     }
 
-    // Funciones de limpieza y comparación de Strings
     private boolean sonIguales(String val1, String val2) {
         if (val1 == null || val2 == null) return false;
         return val1.trim().equalsIgnoreCase(val2.trim());
@@ -79,7 +83,6 @@ public class CoincidenciaService {
         if (val1 == null || val2 == null) return false;
         String v1 = val1.toLowerCase().trim();
         String v2 = val2.toLowerCase().trim();
-        // Si uno contiene la palabra del otro (ej: "Blanco" y "Blanco con negro")
         return v1.contains(v2) || v2.contains(v1);
     }
 }

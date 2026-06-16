@@ -25,7 +25,7 @@ public class ReporteMascota {
 
     //Agregué este campo acá porque mi intención es que los usuarios que ingresan un reporte de mascota perdida deberían saber el nombre de su mascota y si esta
     //tiene chip o algo que la identifique al momento de ser encontrada se le haga más fácil buscar dentro de todos los reportes. Ojalá funcione xd
-    @Column(name = "nombre_mascota")
+    @Column(name = "nombre")
     private String nombre;
 
     // Actualizado para coincidir con el DTO y ser obligatorio

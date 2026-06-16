@@ -3,6 +3,7 @@ package com.backend.bff.client;
 import com.backend.bff.dto.MascotaBaseDTO;
 import com.backend.bff.dto.WebReporteRequestDTO;
 import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -22,4 +23,7 @@ public interface MascotasClient {
 
     @PostMapping("/api/mascotas") // La ruta real en ms-gestion-mascotas
     Object crear(@RequestBody WebReporteRequestDTO reporte);
+
+    @DeleteMapping("/api/mascotas/{id}")
+    void eliminar(@PathVariable("id") Long id);
 }

@@ -1,6 +1,8 @@
 package com.backend.bff.config;
 
-import com.backend.bff.security.SessionAuthFilter;
+import java.util.Arrays;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -14,8 +16,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import java.util.Arrays;
-import java.util.List;
+import com.backend.bff.security.SessionAuthFilter;
 
 @Configuration
 @EnableWebSecurity
@@ -45,6 +46,9 @@ public class SecurityConfig {
                                 "/webjars/**"
                         ).permitAll()
 
+                        // 1. PERMITIR ACTUATOR SIN AUTENTICACIÓN:
+                        .requestMatchers("/actuator/health").permitAll()
+
                         // 3. Rutas públicas
                         .requestMatchers("/api/v1/auth/login").permitAll()
                         .requestMatchers("/api/v1/auth/registro").permitAll()
@@ -52,7 +56,11 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/v1/web/mascotas/**").permitAll()
                         .requestMatchers("/api/v1/web/usuarios/registro").permitAll()
 
-                        // 4. Rutas protegidas
+                        // 4. 🔒 RUTAS EXCLUSIVAS DE ADMINISTRADOR
+                        // Cualquier ruta que empiece con /admin/ requiere obligatoriamente el rol ADMIN
+                        .requestMatchers("/api/v1/web/admin/**").hasRole("ADMIN")
+
+                        // 5. Rutas protegidas genéricas (Para Clientes y Admins)
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(sessionAuthFilter, UsernamePasswordAuthenticationFilter.class);

@@ -14,4 +14,5 @@ public class CoincidenciaDTO {
     private String nombreMascota;
     private Double porcentajeSimilitud; // Ejemplo: 0.85 para 85%
     private String descripcionMatch;    // Ejemplo: "Coincide en raza y color"
+    private String tipoReporte; //
 }

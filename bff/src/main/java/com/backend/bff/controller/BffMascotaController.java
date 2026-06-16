@@ -37,4 +37,10 @@ public class BffMascotaController {
         var response = bffService.crearNuevoReporte(webDto);
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(response);
     }
+    
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> eliminarReporte(@PathVariable Long id) {
+        bffService.eliminarReporte(id);
+        return ResponseEntity.noContent().build(); // Retorna 204 No Content
+    }
 }

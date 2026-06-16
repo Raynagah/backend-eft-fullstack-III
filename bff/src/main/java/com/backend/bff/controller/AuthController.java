@@ -1,14 +1,19 @@
 package com.backend.bff.controller;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.backend.bff.dto.LoginRequest;
-import com.backend.bff.dto.LoginResponse;
 import com.backend.bff.dto.UsuarioDTO;
 import com.backend.bff.service.AuthService;
+
 import feign.FeignException;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -21,22 +26,31 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
         try {
-            // Si todoo sale bien, devolvemos el token y el 200 OK
+            // Si todo sale bien, devolvemos el token y el 200 OK
             return ResponseEntity.ok(authService.autenticar(request));
         } catch (FeignException e) {
-            // Si el ms-usuarios lanza un error (404, 401, etc.),
-            // extraemos su mensaje original y se lo pasamos al frontend
-            return ResponseEntity.status(e.status()).body(e.contentUTF8());
+            int status = e.status();
+            // Si Feign no puede determinar el estatus (-1), lo forzamos a 500
+            if (status < 100 || status > 599) {
+                status = 500;
+            }
+            // Retorna el estatus exacto (401) enviado por ms-usuarios
+            return ResponseEntity.status(status).body(e.contentUTF8());
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Error inesperado en el BFF: " + e.getMessage());
         }
     }
 
     @PostMapping("/registro")
     public ResponseEntity<?> registro(@RequestBody UsuarioDTO request) {
         try {
-            // El BFF reenvía el usuario (con la contraseña intacta) al MS
+            // ¡MEDIDA DE SEGURIDAD CRÍTICA!
+            // Forzamos el rol "cliente" para que nadie pueda inyectar "admin" desde el formulario público
+            request.setTipoUsuario("cliente");
+
+            // El BFF reenvía el usuario al MS
             UsuarioDTO nuevoUsuario = authService.registrar(request);
 
-            // ¡MEDIDA DE SEGURIDAD!
             // Borramos la contraseña del objeto antes de enviarlo al frontend
             if (nuevoUsuario != null) {
                 nuevoUsuario.setPassword(null);

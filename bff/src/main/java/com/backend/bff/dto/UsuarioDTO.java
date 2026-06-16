@@ -1,6 +1,7 @@
 package com.backend.bff.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+
 import lombok.Data;
 
 @Data
@@ -20,4 +21,5 @@ public class UsuarioDTO {
     private String direccion;
     private String ocupacion;
     private String fotoUrl;
+    private String tipoUsuario;
 }

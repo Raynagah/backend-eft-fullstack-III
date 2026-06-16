@@ -11,4 +11,5 @@ public class UsuarioActualizacionDTO {
     private String fotoUrl;
     private String ocupacion;
     private String direccion;
+    private String tipoUsuario;
 }
