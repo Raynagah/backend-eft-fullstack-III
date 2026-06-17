@@ -30,15 +30,25 @@ import com.backend.ms_motor_coincidencias.model.Coincidencia;
 import com.backend.ms_motor_coincidencias.repository.CoincidenciaRepository;
 import com.backend.ms_motor_coincidencias.service.CoincidenciaService;
 
+/**
+ * Función: CoincidenciaControllerTest (Clase de Pruebas)
+ * Título: Pruebas Unitarias del Controlador de Coincidencias
+ * Descripción: Verifica el comportamiento de los endpoints de cálculo de matches, validando 
+ * el manejo de errores, la recuperación de datos para la UI y la orquestación de 
+ * persistencia y notificaciones mediante clientes Feign.
+ */
 @ExtendWith(MockitoExtension.class)
 class CoincidenciaControllerTest {
 
     @Mock
     private MascotasClient mascotasClient;
+    
     @Mock
     private CoincidenciaService coincidenciaService;
+    
     @Mock
     private NotificacionesClient notificacionesClient;
+    
     @Mock
     private CoincidenciaRepository coincidenciaRepository;
 
@@ -49,21 +59,24 @@ class CoincidenciaControllerTest {
     private ResultadoMatchDTO candidataEncontrada;
 
     @BeforeEach
-    @SuppressWarnings("unused")
     void setUp() {
         reporteOriginal = new ResultadoMatchDTO();
-        // 💡 CORRECCIÓN: Se cambió setReporteId por setId
         reporteOriginal.setId(1L);
         reporteOriginal.setTipoReporte("PERDIDA");
 
         candidataEncontrada = new ResultadoMatchDTO();
-        // 💡 CORRECCIÓN: Se cambió setReporteId por setId
         candidataEncontrada.setId(2L);
         candidataEncontrada.setTipoReporte("ENCONTRADA");
         candidataEncontrada.setEmailContacto("contacto@test.com");
         candidataEncontrada.setFotografiaUrl("url-foto");
     }
 
+    /**
+     * Función: buscarMatches_IdInvalido_LanzaBadRequestException
+     * Título: Validar ID incorrecto
+     * Descripción: Comprueba que el controlador arroje una excepción de tipo BadRequestException 
+     * al recibir un ID nulo o con valor menor o igual a cero.
+     */
     @Test
     void buscarMatches_IdInvalido_LanzaBadRequestException() {
         BadRequestException ex1 = assertThrows(BadRequestException.class, () -> controller.buscarMatches(null));
@@ -75,37 +88,62 @@ class CoincidenciaControllerTest {
         assertNotNull(ex3);
     }
 
+    /**
+     * Función: buscarMatches_ReporteNoExiste_LanzaResourceNotFoundException
+     * Título: Validar reporte inexistente
+     * Descripción: Verifica que si el cliente de mascotas no encuentra el reporte original, 
+     * el sistema detenga el proceso lanzando una excepción ResourceNotFoundException.
+     */
     @Test
-    void buscarMatches_ReporteNoExisteOTipoNulo_LanzaResourceNotFoundException() {
+    void buscarMatches_ReporteNoExiste_LanzaResourceNotFoundException() {
         when(mascotasClient.obtenerMascotaPorId(99L)).thenReturn(null);
+        
         ResourceNotFoundException ex1 = assertThrows(ResourceNotFoundException.class, () -> controller.buscarMatches(99L));
 
-        ResultadoMatchDTO sinTipo = new ResultadoMatchDTO();
-        // 💡 CORRECCIÓN: Se cambió setReporteId por setId
-        sinTipo.setId(100L);
-        when(mascotasClient.obtenerMascotaPorId(100L)).thenReturn(sinTipo);
-        ResourceNotFoundException ex2 = assertThrows(ResourceNotFoundException.class, () -> controller.buscarMatches(100L));
-
         assertNotNull(ex1);
-        assertNotNull(ex2);
     }
 
+    /**
+     * Función: buscarMatches_ObtieneResultadosSinModificarEstado
+     * Título: Búsqueda de solo lectura para UI
+     * Descripción: Asegura que el endpoint de búsqueda únicamente calcule y retorne los 
+     * datos sin invocar a los clientes de persistencia o notificación.
+     */
     @Test
-    void buscarMatches_ConCoincidenciaAltaYDatosIncompletosEnLista_DebeFiltrarGuardarYNotificar() {
-        // Agregamos elementos incompletos para forzar las ramas nulas de los .filter() del Stream
-        ResultadoMatchDTO candidataMala1 = new ResultadoMatchDTO(); // Tipo nulo
-        ResultadoMatchDTO candidataMala2 = new ResultadoMatchDTO();
-        candidataMala2.setTipoReporte("ENCONTRADA"); // id nulo
+    void buscarMatches_ObtieneResultadosSinModificarEstado() {
+        when(mascotasClient.obtenerMascotaPorId(1L)).thenReturn(reporteOriginal);
+        when(mascotasClient.obtenerTodasLasMascotas()).thenReturn(List.of(reporteOriginal, candidataEncontrada));
+        
+        candidataEncontrada.setPorcentajeSimilitud(90.0);
+        when(coincidenciaService.evaluarCoincidencias(any(), any())).thenReturn(List.of(candidataEncontrada));
+
+        ResponseEntity<List<ResultadoMatchDTO>> response = controller.buscarMatches(1L);
+
+        assertEquals(200, response.getStatusCode().value());
+        assertFalse(response.getBody().isEmpty());
+        verify(coincidenciaRepository, never()).save(any(Coincidencia.class));
+        verify(notificacionesClient, never()).enviarNotificaciones(anyList());
+    }
+
+    /**
+     * Función: procesarYNotificarMatches_ConCoincidenciaAlta_DebeFiltrarGuardarYNotificar
+     * Título: Procesar coincidencia alta y notificar
+     * Descripción: Valida el flujo completo de procesamiento. Si existe un match por encima 
+     * del umbral, el sistema debe guardar la coincidencia y emitir la alerta.
+     */
+    @Test
+    void procesarYNotificarMatches_ConCoincidenciaAlta_DebeFiltrarGuardarYNotificar() {
+        ResultadoMatchDTO candidataMala = new ResultadoMatchDTO();
 
         when(mascotasClient.obtenerMascotaPorId(1L)).thenReturn(reporteOriginal);
         when(mascotasClient.obtenerTodasLasMascotas()).thenReturn(
-                List.of(reporteOriginal, candidataEncontrada, candidataMala1, candidataMala2)
+                List.of(reporteOriginal, candidataEncontrada, candidataMala)
         );
 
         candidataEncontrada.setPorcentajeSimilitud(90.0);
         when(coincidenciaService.evaluarCoincidencias(any(), any())).thenReturn(List.of(candidataEncontrada));
 
-        ResponseEntity<List<ResultadoMatchDTO>> response = controller.buscarMatches(1L);
+        ResponseEntity<String> response = controller.procesarYNotificarMatches(1L);
 
         assertNotNull(response);
         assertEquals(200, response.getStatusCode().value());
@@ -113,8 +151,14 @@ class CoincidenciaControllerTest {
         verify(notificacionesClient, times(1)).enviarNotificaciones(anyList());
     }
 
+    /**
+     * Función: procesarYNotificarMatches_ConCoincidenciaBaja_NoDebeGuardarNiNotificar
+     * Título: Descartar coincidencia baja
+     * Descripción: Garantiza que las coincidencias calculadas que no alcancen el umbral 
+     * mínimo de similitud (85%) no se persistan ni generen envío de correos.
+     */
     @Test
-    void buscarMatches_ConCoincidenciaBaja_NoDebeGuardarNiNotificar() {
+    void procesarYNotificarMatches_ConCoincidenciaBaja_NoDebeGuardarNiNotificar() {
         reporteOriginal.setTipoReporte("ENCONTRADA");
         candidataEncontrada.setTipoReporte("PERDIDA");
 
@@ -124,15 +168,22 @@ class CoincidenciaControllerTest {
         candidataEncontrada.setPorcentajeSimilitud(50.0);
         when(coincidenciaService.evaluarCoincidencias(any(), any())).thenReturn(List.of(candidataEncontrada));
 
-        ResponseEntity<List<ResultadoMatchDTO>> response = controller.buscarMatches(1L);
+        ResponseEntity<String> response = controller.procesarYNotificarMatches(1L);
 
         assertEquals(200, response.getStatusCode().value());
         verify(coincidenciaRepository, never()).save(any(Coincidencia.class));
         verify(notificacionesClient, never()).enviarNotificaciones(anyList());
     }
 
+    /**
+     * Función: procesarYNotificarMatches_ExcepcionNotificacion_DebeManejarCatchSinRomperRespuesta
+     * Título: Tolerancia a fallos en el cliente de notificaciones
+     * Descripción: Simula una caída del microservicio de notificaciones y verifica que 
+     * el bloque try-catch del controlador intercepte el error, permitiendo retornar una 
+     * respuesta HTTP 200 sin romper el flujo principal.
+     */
     @Test
-    void buscarMatches_ExcepcionNotificacion_DebeManejarCatchSinRomperRespuesta() {
+    void procesarYNotificarMatches_ExcepcionNotificacion_DebeManejarCatchSinRomperRespuesta() {
         when(mascotasClient.obtenerMascotaPorId(1L)).thenReturn(reporteOriginal);
         when(mascotasClient.obtenerTodasLasMascotas()).thenReturn(List.of(candidataEncontrada));
 
@@ -142,9 +193,9 @@ class CoincidenciaControllerTest {
         doThrow(new RuntimeException("Microservicio de notificaciones no responde"))
                 .when(notificacionesClient).enviarNotificaciones(anyList());
 
-        ResponseEntity<List<ResultadoMatchDTO>> response = controller.buscarMatches(1L);
+        ResponseEntity<String> response = controller.procesarYNotificarMatches(1L);
 
         assertEquals(200, response.getStatusCode().value());
-        assertFalse(response.getBody().isEmpty());
+        assertNotNull(response.getBody());
     }
 }

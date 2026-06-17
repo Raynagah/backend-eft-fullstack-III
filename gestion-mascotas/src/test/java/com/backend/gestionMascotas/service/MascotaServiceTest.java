@@ -1,6 +1,7 @@
 package com.backend.gestionMascotas.service;
 
 import com.backend.gestionMascotas.client.GeolocalizacionClient;
+import com.backend.gestionMascotas.dto.ReporteRequestDTO;
 import com.backend.gestionMascotas.dto.ReporteResponseDTO;
 import com.backend.gestionMascotas.exception.ReporteNotFoundException;
 import com.backend.gestionMascotas.model.ReporteMascota;
@@ -11,25 +12,37 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 
 import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.Mockito.*;
 
+/**
+ * Función: MascotaServiceTest (Clase de Pruebas)
+ * Título: Pruebas Unitarias del Servicio de Gestión de Mascotas
+ * Descripción: Valida la lógica central del dominio, incluyendo el orquestado de 
+ * transacciones distribuidas (Saga), compensaciones automáticas, emisión de eventos 
+ * asíncronos y operaciones CRUD estándar con sus respectivas validaciones.
+ */
 @ExtendWith(MockitoExtension.class)
 public class MascotaServiceTest {
 
     @Mock
     private MascotaRepository mascotaRepository;
 
-    // Agregamos los otros componentes que usa tu Service
     @Mock
     private ReporteFactory reporteFactory;
 
     @Mock
     private GeolocalizacionClient geoClient;
+
+    @Mock
+    private RabbitTemplate rabbitTemplate;
 
     @InjectMocks
     private MascotaService mascotaService;
@@ -45,7 +58,12 @@ public class MascotaServiceTest {
         mascotaMock.setTipoReporte("PERDIDA");
     }
 
-    // --- TEST 1: Buscar por ID (Happy Path) ---
+    /**
+     * Función: cuandoObtenerReportePorIdExiste_entoncesRetornaDTO
+     * Título: Obtener reporte exitoso por ID
+     * Descripción: Verifica que la consulta por identificador delegue al repositorio y mapee 
+     * correctamente la entidad encontrada a su DTO correspondiente.
+     */
     @Test
     void cuandoObtenerReportePorIdExiste_entoncesRetornaDTO() {
         when(mascotaRepository.findById(1L)).thenReturn(Optional.of(mascotaMock));
@@ -57,21 +75,26 @@ public class MascotaServiceTest {
         verify(mascotaRepository, times(1)).findById(1L);
     }
 
-    // --- TEST 2: Buscar por ID (Error Path) ---
+    /**
+     * Función: cuandoObtenerReportePorIdNoExiste_entoncesLanzaExcepcion
+     * Título: Fallo controlado al buscar ID inexistente
+     * Descripción: Asegura que el servicio propague una ReporteNotFoundException si 
+     * el identificador provisto no se encuentra en la base de datos.
+     */
     @Test
     void cuandoObtenerReportePorIdNoExiste_entoncesLanzaExcepcion() {
-        // Simulamos que la base de datos devuelve vacío
         when(mascotaRepository.findById(99L)).thenReturn(Optional.empty());
 
-        // Verificamos que al llamar al servicio, se lance la excepción correcta
-        assertThrows(ReporteNotFoundException.class, () -> {
-            mascotaService.obtenerReportePorId(99L);
-        });
-
+        assertThrows(ReporteNotFoundException.class, () -> mascotaService.obtenerReportePorId(99L));
         verify(mascotaRepository, times(1)).findById(99L);
     }
 
-    // --- TEST 3: Obtener Todos ---
+    /**
+     * Función: cuandoObtenerTodos_entoncesRetornaListaDeDTOs
+     * Título: Obtener listado global de reportes
+     * Descripción: Valida que el servicio recupere satisfactoriamente la colección completa 
+     * de registros y la transforme en una lista estructurada de objetos DTO.
+     */
     @Test
     void cuandoObtenerTodos_entoncesRetornaListaDeDTOs() {
         when(mascotaRepository.findAll()).thenReturn(List.of(mascotaMock));
@@ -84,7 +107,12 @@ public class MascotaServiceTest {
         verify(mascotaRepository, times(1)).findAll();
     }
 
-    // --- TEST 4: Obtener por Tipo ---
+    /**
+     * Función: cuandoObtenerPorTipo_entoncesRetornaListaFiltrada
+     * Título: Obtener reportes categorizados
+     * Descripción: Comprueba que el servicio delegue correctamente el filtrado por tipo 
+     * (ej. "PERDIDA") al repositorio y retorne los DTOs que cumplen con el criterio.
+     */
     @Test
     void cuandoObtenerPorTipo_entoncesRetornaListaFiltrada() {
         when(mascotaRepository.findByTipoReporte("PERDIDA")).thenReturn(List.of(mascotaMock));
@@ -96,124 +124,124 @@ public class MascotaServiceTest {
         verify(mascotaRepository, times(1)).findByTipoReporte("PERDIDA");
     }
 
-    // --- TEST 5: Eliminar Reporte ---
+    /**
+     * Función: cuandoEliminarReporteExiste_entoncesEliminaSinErrores
+     * Título: Flujo exitoso de eliminación integral
+     * Descripción: Verifica que al solicitar el borrado de un reporte, se ejecute la eliminación 
+     * en el microservicio de geolocalización y, seguidamente, el borrado físico en el repositorio local.
+     */
     @Test
     void cuandoEliminarReporteExiste_entoncesEliminaSinErrores() {
         when(mascotaRepository.findById(1L)).thenReturn(Optional.of(mascotaMock));
 
-        // Act: Ejecutamos el métodoo que no retorna nada (void)
         assertDoesNotThrow(() -> mascotaService.eliminarReporte(1L));
 
-        // Verificamos que se llamó al cliente geo y al borrado del repositorio
         verify(geoClient, times(1)).eliminarUbicacion(1L);
         verify(mascotaRepository, times(1)).delete(mascotaMock);
     }
 
+    /**
+     * Función: cuandoRegistrarReporteExitoso_entoncesRetornaDTO
+     * Título: Flujo exitoso de registro (Orquestación Saga)
+     * Descripción: Valida la creación del reporte, su persistencia local, la sincronización 
+     * en el cliente geográfico, el envío del evento de mensajería (RabbitMQ) y la confirmación final de la saga.
+     */
     @Test
     void cuandoRegistrarReporteExitoso_entoncesRetornaDTO() {
-        // ARRANGE: Preparamos el DTO de entrada (Request)
-        com.backend.gestionMascotas.dto.ReporteRequestDTO requestDto =
-                new com.backend.gestionMascotas.dto.ReporteRequestDTO(
-                        125L, "PERDIDA", "Cachupín", "Perro", "Raza", "Dorado",
-                        "Grande", "Juan Pérez", "+56912345678", "juan@email.com",
-                        "http://foto.jpg", -34.6037, -58.3816
-                );
+        ReporteRequestDTO requestDto = new ReporteRequestDTO(
+                125L, "PERDIDA", "Cachupín", "Perro", "Raza", "Dorado",
+                "Grande", "Juan Pérez", "+56912345678", "juan@email.com",
+                "http://foto.jpg", -34.6037, -58.3816
+        );
 
-        // Definimos el comportamiento de los Mocks
         when(reporteFactory.crearReporte(requestDto)).thenReturn(mascotaMock);
         when(mascotaRepository.save(any(ReporteMascota.class))).thenReturn(mascotaMock);
-        // Nota: geoClient.registrarUbicacion es void, por defecto Mockito no hace nada (lo deja pasar)
 
-        // ACT: Ejecutamos el métodoo real
         ReporteResponseDTO resultado = mascotaService.registrarReporte(requestDto);
 
-        // ASSERT: Verificaciones básicas
         assertNotNull(resultado);
         assertEquals("Cachupín", resultado.nombre());
 
-        // Verificamos que se usaron las dependencias correctamente
         verify(reporteFactory, times(1)).crearReporte(requestDto);
-        verify(mascotaRepository, times(2)).save(any(ReporteMascota.class)); // Se llama 2 veces en tu service (al inicio y al completar la saga)
+        verify(mascotaRepository, times(2)).save(any(ReporteMascota.class));
         verify(geoClient, times(1)).registrarUbicacion(anyMap());
+        verify(rabbitTemplate, times(1)).convertAndSend(anyString(), anyString(), any(Object.class));
     }
 
-    // --- TEST: Eliminar Reporte (Error Path - Faltaba la lambda) ---
+    /**
+     * Función: cuandoEliminarReporteNoExiste_entoncesLanzaExcepcion
+     * Título: Abortar eliminación ante reporte inexistente
+     * Descripción: Comprueba que el flujo de eliminación detenga su ejecución de inmediato y arroje 
+     * una excepción sin invocar recursos externos o locales de borrado.
+     */
     @Test
     void cuandoEliminarReporteNoExiste_entoncesLanzaExcepcion() {
-        // Arrange: Simulamos que no se encuentra en la base de datos
         when(mascotaRepository.findById(99L)).thenReturn(Optional.empty());
 
-        // Act & Assert: Verificamos que lance la excepción
-        assertThrows(ReporteNotFoundException.class, () -> {
-            mascotaService.eliminarReporte(99L);
-        });
+        assertThrows(ReporteNotFoundException.class, () -> mascotaService.eliminarReporte(99L));
 
-        // Verificamos que NO se llamó al cliente geo ni al delete
         verify(geoClient, never()).eliminarUbicacion(anyLong());
         verify(mascotaRepository, never()).delete(any());
     }
 
-    // --- TEST: Compensar Reporte (Saga - Faltaba métodoo y lambda) ---
+    /**
+     * Función: cuandoCompensarReporteExiste_entoncesActualizaEstado
+     * Título: Ejecución manual de compensación Saga
+     * Descripción: Verifica que la orden de compensar actualice el estado interno del reporte 
+     * indicando una asincronía fallida ("FAILED_SYNC").
+     */
     @Test
     void cuandoCompensarReporteExiste_entoncesActualizaEstado() {
-        // Arrange: Simulamos que la mascota existe
         when(mascotaRepository.findById(1L)).thenReturn(Optional.of(mascotaMock));
-        // Aquí no necesitamos mockear el save si solo nos importa que se llame
 
-        // Act
         mascotaService.compensarReporte(1L);
 
-        // Assert: Verificamos que se buscó y luego se guardó (con el estado compensado)
         verify(mascotaRepository, times(1)).findById(1L);
         verify(mascotaRepository, times(1)).save(mascotaMock);
     }
 
-    // --- TEST: Registrar Reporte Falla (Saga Catch - Corrección) ---
+    /**
+     * Función: cuandoRegistrarReporteFallaGeo_entoncesCompensaYRetornaDto
+     * Título: Flujo compensatorio automático en registro (Saga Catch)
+     * Descripción: Simula un error crítico al invocar el cliente de geolocalización, asegurando 
+     * que el sistema intercepte la falla, proceda a compensar el estado localmente, pero no interrumpa la respuesta.
+     */
     @Test
     void cuandoRegistrarReporteFallaGeo_entoncesCompensaYRetornaDto() {
-        // Arrange
-        com.backend.gestionMascotas.dto.ReporteRequestDTO requestDto =
-                new com.backend.gestionMascotas.dto.ReporteRequestDTO(
-                        125L, "PERDIDA", "Cachupín", "Perro", "Raza", "Dorado",
-                        "Grande", "Juan", "123", "juan@email.com", "url", -34.6, -58.3
-                );
+        ReporteRequestDTO requestDto = new ReporteRequestDTO(
+                125L, "PERDIDA", "Cachupín", "Perro", "Raza", "Dorado",
+                "Grande", "Juan", "123", "juan@email.com", "url", -34.6, -58.3
+        );
 
         when(reporteFactory.crearReporte(requestDto)).thenReturn(mascotaMock);
-        // Al guardar la primera vez, retorna el mock
         when(mascotaRepository.save(any(ReporteMascota.class))).thenReturn(mascotaMock);
-
-        // Simulamos que la API de mapas falla
         doThrow(new RuntimeException("Fallo en la API de Mapas")).when(geoClient).registrarUbicacion(anyMap());
-
-        // ¡IMPORTANTE! Como tu catch llama a compensarReporte() y este hace un findById, necesitamos mockearlo
         when(mascotaRepository.findById(1L)).thenReturn(Optional.of(mascotaMock));
 
-        // Act: Ahora no usamos assertThrows, porque tu código captura el error y retorna el DTO
         ReporteResponseDTO resultado = mascotaService.registrarReporte(requestDto);
 
-        // Assert
         assertNotNull(resultado);
         assertEquals("Cachupín", resultado.nombre());
 
-        // Verificamos el flujo interno
-        verify(geoClient, times(1)).registrarUbicacion(anyMap()); // Intentó registrar
-        verify(mascotaRepository, times(1)).findById(1L); // Llamó a buscarlo para compensar
-        verify(mascotaRepository, times(2)).save(any(ReporteMascota.class)); // Guardó al inicio y al compensar
+        verify(geoClient, times(1)).registrarUbicacion(anyMap());
+        verify(mascotaRepository, times(1)).findById(1L); 
+        verify(mascotaRepository, times(2)).save(any(ReporteMascota.class)); 
     }
 
-    // --- TEST: Eliminar Reporte Falla Geo (Catch de eliminación) ---
+    /**
+     * Función: cuandoEliminarReporteFallaGeo_entoncesCapturaErrorYBorraMascota
+     * Título: Tolerancia a fallos externos durante eliminación
+     * Descripción: Garantiza que un fallo originado al intentar purgar la ubicación remota no evite 
+     * la eliminación física del registro local (Degradación elegante).
+     */
     @Test
     void cuandoEliminarReporteFallaGeo_entoncesCapturaErrorYBorraMascota() {
-        // Arrange
         when(mascotaRepository.findById(1L)).thenReturn(Optional.of(mascotaMock));
-        // Simulamos que al intentar borrar la ubicación lanza un error
         doThrow(new RuntimeException("Error geo")).when(geoClient).eliminarUbicacion(1L);
 
-        // Act
         assertDoesNotThrow(() -> mascotaService.eliminarReporte(1L));
 
-        // Assert
         verify(geoClient, times(1)).eliminarUbicacion(1L);
-        verify(mascotaRepository, times(1)).delete(mascotaMock); // Se asegura de que el borrado local SÍ ocurra
+        verify(mascotaRepository, times(1)).delete(mascotaMock); 
     }
 }

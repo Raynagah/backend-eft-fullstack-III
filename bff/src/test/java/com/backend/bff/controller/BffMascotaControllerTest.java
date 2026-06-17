@@ -8,6 +8,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import static org.mockito.ArgumentMatchers.any;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -16,6 +17,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -27,6 +29,13 @@ import com.backend.bff.dto.WebReporteRequestDTO;
 import com.backend.bff.service.BffMascotaService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+/**
+ * Función: BffMascotaControllerTest (Clase de Pruebas)
+ * Título: Pruebas Unitarias del Controlador Web de Mascotas (BFF)
+ * Descripción: Verifica la correcta exposición y funcionamiento de los endpoints 
+ * consumidos por la interfaz web, incluyendo la obtención del dashboard, 
+ * detalles consolidados, y la gestión de reportes (creación y eliminación).
+ */
 @ExtendWith(MockitoExtension.class)
 class BffMascotaControllerTest {
 
@@ -46,12 +55,15 @@ class BffMascotaControllerTest {
         objectMapper = new ObjectMapper();
     }
 
-    // ==========================================
-    // TESTS PARA OBTENER TODAS LAS MASCOTAS (DASHBOARD)
-    // ==========================================
+    /**
+     * Función: obtenerTodasLasMascotas_DebeRetornarListaYStatus200
+     * Título: Validar obtención del dashboard de mascotas
+     * Descripción: Comprueba que el controlador responda correctamente a la petición GET 
+     * devolviendo una lista de tarjetas (MascotaCardDTO) optimizadas para el frontend 
+     * junto con un código de estado HTTP 200 (OK).
+     */
     @Test
     void obtenerTodasLasMascotas_DebeRetornarListaYStatus200() throws Exception {
-        // Usamos el builder tal como lo tienes en tu Service
         MascotaCardDTO card = MascotaCardDTO.builder()
                 .id(1L)
                 .nombre("Firulais")
@@ -69,9 +81,12 @@ class BffMascotaControllerTest {
         verify(bffService, times(1)).obtenerDashboard();
     }
 
-    // ==========================================
-    // TESTS PARA DETALLE DE MASCOTA
-    // ==========================================
+    /**
+     * Función: obtenerDetalle_DebeRetornarDetalleYStatus200
+     * Título: Validar obtención de detalle de mascota
+     * Descripción: Asegura que el controlador reciba el parámetro de ruta (ID), delegue la consulta 
+     * al servicio BFF y devuelva el objeto MascotaDetalleCompletoDTO con un código HTTP 200 (OK).
+     */
     @Test
     void obtenerDetalle_DebeRetornarDetalleYStatus200() throws Exception {
         MascotaDetalleCompletoDTO detalle = MascotaDetalleCompletoDTO.builder()
@@ -91,14 +106,17 @@ class BffMascotaControllerTest {
         verify(bffService, times(1)).obtenerDetalleMascota(10L);
     }
 
-    // ==========================================
-    // TESTS PARA CREAR REPORTE
-    // ==========================================
+    /**
+     * Función: crearReporte_DebeRetornarStatus202Accepted
+     * Título: Validar creación de nuevo reporte
+     * Descripción: Verifica que el controlador recepcione exitosamente un payload validado, 
+     * procese la solicitud delegando en el servicio, y retorne la confirmación junto 
+     * con un código de estado HTTP 202 (ACCEPTED).
+     */
     @Test
     void crearReporte_DebeRetornarStatus202Accepted() throws Exception {
         WebReporteRequestDTO requestDto = new WebReporteRequestDTO();
 
-        // --- CAMPOS OBLIGATORIOS (Para pasar el @Valid) ---
         requestDto.setUsuarioId(5L);
         requestDto.setTipoReporte("PERDIDA");
         requestDto.setEspecie("Perro");
@@ -108,19 +126,35 @@ class BffMascotaControllerTest {
         requestDto.setNombreContacto("Juan Pérez");
         requestDto.setTelefonoContacto("+56912345678");
 
-        // --- CAMPOS OPCIONALES ---
         requestDto.setNombre("Rex");
         requestDto.setRaza("Pastor Alemán");
 
-        // Simulamos la respuesta del servicio
         when(bffService.crearNuevoReporte(any(WebReporteRequestDTO.class))).thenReturn("Reporte en proceso");
 
         mockMvc.perform(post("/api/v1/web/mascotas/reportar")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(requestDto)))
-                .andExpect(status().isAccepted()) // ¡Adiós 400, hola 202!
+                .andExpect(status().isAccepted()) 
                 .andExpect(content().string("Reporte en proceso"));
 
         verify(bffService, times(1)).crearNuevoReporte(any(WebReporteRequestDTO.class));
+    }
+
+    /**
+     * Función: eliminarReporte_DebeRetornarStatus204NoContent
+     * Título: Validar eliminación de reporte
+     * Descripción: Comprueba que el controlador maneje correctamente la petición DELETE 
+     * para un ID específico y retorne un estado HTTP 204 (NO CONTENT) tras una eliminación exitosa.
+     */
+    @Test
+    void eliminarReporte_DebeRetornarStatus204NoContent() throws Exception {
+        Long reporteId = 15L;
+        doNothing().when(bffService).eliminarReporte(reporteId);
+
+        mockMvc.perform(delete("/api/v1/web/mascotas/" + reporteId)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNoContent());
+
+        verify(bffService, times(1)).eliminarReporte(reporteId);
     }
 }

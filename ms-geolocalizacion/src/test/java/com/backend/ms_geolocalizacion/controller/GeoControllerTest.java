@@ -25,6 +25,13 @@ import com.backend.ms_geolocalizacion.exception.ResourceNotFoundException;
 import com.backend.ms_geolocalizacion.model.UbicacionAlerta;
 import com.backend.ms_geolocalizacion.service.GeoService;
 
+/**
+ * Función: GeoControllerTest (Clase de Pruebas)
+ * Título: Pruebas Unitarias del Controlador de Geolocalización
+ * Descripción: Verifica el comportamiento de los endpoints REST encargados de la gestión de 
+ * ubicaciones, asegurando que las respuestas HTTP, el manejo de excepciones y la 
+ * interacción con el servicio subyacente operen correctamente.
+ */
 @ExtendWith(MockitoExtension.class)
 class GeoControllerTest {
 
@@ -37,13 +44,18 @@ class GeoControllerTest {
     private UbicacionAlerta ubicacion;
 
     @BeforeEach
-    @SuppressWarnings("unused")
     void setUp() {
         ubicacion = new UbicacionAlerta();
         ubicacion.setId(1L);
         ubicacion.setReporteId(100L);
     }
 
+    /**
+     * Función: registrar_DebeRetornar201Created
+     * Título: Validar registro exitoso de ubicación
+     * Descripción: Comprueba que al enviar una ubicación válida, el controlador llame al servicio 
+     * correspondiente y retorne la entidad persistida junto con un código HTTP 201 (CREATED).
+     */
     @Test
     void registrar_DebeRetornar201Created() {
         when(geoService.registrarUbicacion(any(UbicacionAlerta.class))).thenReturn(ubicacion);
@@ -55,6 +67,12 @@ class GeoControllerTest {
         assertEquals(1L, response.getBody().getId());
     }
 
+    /**
+     * Función: obtenerTodas_DebeRetornar200OkYLista
+     * Título: Validar obtención general de ubicaciones
+     * Descripción: Asegura que el endpoint de consulta general retorne una lista poblada 
+     * de ubicaciones acompañada de un código HTTP 200 (OK).
+     */
     @Test
     void obtenerTodas_DebeRetornar200OkYLista() {
         when(geoService.obtenerTodas()).thenReturn(List.of(ubicacion));
@@ -65,6 +83,12 @@ class GeoControllerTest {
         assertFalse(response.getBody().isEmpty());
     }
 
+    /**
+     * Función: buscarCercanas_DebeRetornar200Ok
+     * Título: Validar búsqueda espacial por proximidad
+     * Descripción: Verifica que la consulta por latitud, longitud y radio delegue correctamente 
+     * los parámetros al servicio y devuelva los resultados con un código HTTP 200 (OK).
+     */
     @Test
     void buscarCercanas_DebeRetornar200Ok() {
         when(geoService.buscarCercanas(10.0, 10.0, 50.0)).thenReturn(List.of(ubicacion));
@@ -75,9 +99,14 @@ class GeoControllerTest {
         assertEquals(1, response.getBody().size());
     }
 
+    /**
+     * Función: eliminar_CuandoExiste_DebeRetornar204NoContent
+     * Título: Validar eliminación exitosa
+     * Descripción: Comprueba que al solicitar la eliminación de un ID existente, el controlador 
+     * responda correctamente con un código HTTP 204 (NO CONTENT).
+     */
     @Test
     void eliminar_CuandoExiste_DebeRetornar204NoContent() {
-        // Al retornar void, usamos doNothing()
         doNothing().when(geoService).eliminarUbicacion(1L);
 
         ResponseEntity<Void> response = geoController.eliminar(1L);
@@ -86,22 +115,31 @@ class GeoControllerTest {
         verify(geoService, times(1)).eliminarUbicacion(1L);
     }
 
+    /**
+     * Función: eliminar_CuandoNoExiste_DebePropagarResourceNotFoundException
+     * Título: Validar propagación de error al eliminar
+     * Descripción: Simula un fallo en el servicio (ID inexistente) y asegura que el controlador 
+     * no enmascare la excepción, permitiendo que el GlobalExceptionHandler la capture.
+     */
     @Test
     void eliminar_CuandoNoExiste_DebePropagarResourceNotFoundException() {
-        // 1. Simulamos que el servicio lanza la excepción por no encontrar el ID
         doThrow(new ResourceNotFoundException("No se encontró la ubicación"))
                 .when(geoService).eliminarUbicacion(2L);
 
-        // 2. Asignarlo a una variable 'exception'
         ResourceNotFoundException exception = assertThrows(
                 ResourceNotFoundException.class, 
                 () -> geoController.eliminar(2L)
         );
 
-        // 3. Validamos que el mensaje dentro de la excepción sea el esperado
         assertEquals("No se encontró la ubicación", exception.getMessage());
     }
 
+    /**
+     * Función: obtenerPorReporte_DebeRetornar200OkYObjeto
+     * Título: Validar búsqueda de ubicación por ID de reporte
+     * Descripción: Verifica que el endpoint retorne exitosamente los datos espaciales 
+     * asociados a un reporte específico, devolviendo un código HTTP 200 (OK).
+     */
     @Test
     void obtenerPorReporte_DebeRetornar200OkYObjeto() {
         when(geoService.obtenerPorReporteId(100L)).thenReturn(ubicacion);
