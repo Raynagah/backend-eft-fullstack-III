@@ -23,8 +23,8 @@ public class NotificacionMatchDTO {
 
     private String nombreMascotaCandidata;
     private String fotografiaUrl;
-    private String titulo;  // Ejemplo: "¡Posible coincidencia encontrada!"
-    private String mensaje; // Ejemplo: "Hemos encontrado un perro con 82% de similitud"
+    private String titulo;
+    private String mensaje;
     private LocalDateTime fechaCreacion;
     private boolean leido = false;
 }

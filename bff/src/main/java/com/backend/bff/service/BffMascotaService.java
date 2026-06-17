@@ -9,6 +9,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Función: BffMascotaService (Servicio)
+ * Título: Servicio Orquestador de Mascotas (BFF)
+ * Descripción: Actúa como el orquestador principal para la lógica de negocio de las mascotas en el Backend For Frontend. Es responsable de agregar información proveniente de múltiples microservicios (mascotas, geolocalización, usuarios y motor de coincidencias) para consolidar respuestas completas destinadas a la interfaz web.
+ */
 @Service
 @RequiredArgsConstructor
 public class BffMascotaService {
@@ -17,8 +22,14 @@ public class BffMascotaService {
     private final GeolocalizacionClient geoClient;
     private final UsuarioClient usuarioClient;
     private final CoincidenciasClient coincidenciasClient;
-    private final NotificacionClient notificacionClient;
 
+    /**
+     * Función: obtenerDashboard
+     * Título: Obtener datos para dashboard
+     * Descripción: Recupera el listado completo de mascotas desde el microservicio principal y lo transforma en una lista de objetos MascotaCardDTO, mapeando y formateando los campos necesarios para la visualización eficiente en el frontend.
+     *
+     * @return Lista de objetos MascotaCardDTO listos para renderizar en el dashboard.
+     */
     public List<MascotaCardDTO> obtenerDashboard() {
         return mascotaClient.obtenerTodas().stream()
                 .map(m -> MascotaCardDTO.builder()
@@ -34,6 +45,14 @@ public class BffMascotaService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Función: obtenerDetalleMascota
+     * Título: Obtener detalle completo y enriquecido
+     * Descripción: Construye un objeto MascotaDetalleCompletoDTO mediante un proceso de agregación. Inicia con los datos base de la mascota y enriquece la información consultando los servicios de geolocalización, usuarios y el motor de coincidencias, manejando errores de forma tolerante para garantizar que la respuesta principal siempre se entregue.
+     *
+     * @param id Identificador único de la mascota.
+     * @return Objeto MascotaDetalleCompletoDTO con toda la información consolidada.
+     */
     public MascotaDetalleCompletoDTO obtenerDetalleMascota(Long id) {
         // 1. Datos base de la Mascota
         var mascota = mascotaClient.obtenerPorId(id);
@@ -57,7 +76,7 @@ public class BffMascotaService {
                 .contactoEmail(mascota.getEmailContacto())
                 .build();
 
-        // 2. Integración con Geolocalización (Enriquecimiento)
+        // 2. Integración con Geolocalización
         try {
             var ubicacion = geoClient.obtenerUbicacionPorId(id);
             if (ubicacion != null && ubicacion.getLatitud() != null) {
@@ -70,7 +89,7 @@ public class BffMascotaService {
             System.err.println("ERROR REAL EN GEOLOCALIZACION: " + e.getMessage());
         }
 
-        // 3. Integración con Usuarios (Enriquecimiento)
+        // 3. Integración con Usuarios
         try {
             var usuario = usuarioClient.obtenerUsuarioPorId(mascota.getUsuarioId());
             if (usuario != null && usuario.getNombre() != null) {
@@ -85,7 +104,7 @@ public class BffMascotaService {
             //System.err.println("BFF Info: ms-usuarios falló. Usando contacto base de la mascota.");
         }
 
-        // 4. Integración con Motor de Coincidencias (Enriquecimiento de Coincidencias)
+        // 4. Integración con Motor de Coincidencias 
         try {
             // A. Obtenemos la lista básica de coincidencias desde el microservicio
             List<CoincidenciaDTO> coincidencias = coincidenciasClient.obtenerCoincidenciasPorMascota(id);
@@ -118,6 +137,14 @@ public class BffMascotaService {
         return detalle;
     }
 
+    /**
+     * Función: crearNuevoReporte
+     * Título: Crear nuevo reporte y procesar coincidencias
+     * Descripción: Coordina el flujo de creación de un nuevo reporte: primero registra la mascota en el microservicio core y, tras extraer el ID generado, solicita al motor de coincidencias que evalúe posibles cruces (notificaciones) relacionados con este nuevo registro.
+     *
+     * @param dto Datos del reporte enviado desde el formulario web.
+     * @return Respuesta del microservicio core tras la creación.
+     */
     public Object crearNuevoReporte(WebReporteRequestDTO dto) {
         String nombreMascota = (dto.getNombre() != null && !dto.getNombre().isBlank()) ? dto.getNombre() : "Sin nombre";
         System.out.println("BFF: Recibiendo reporte para: " + nombreMascota + " (" + dto.getEspecie() + " " + dto.getRaza() + ")");
@@ -138,8 +165,6 @@ public class BffMascotaService {
         // 3. Llamar al motor para que evalúe y notifique de verdad (solo si corresponde)
         if (nuevaMascotaId != null) {
             try {
-                // NOTA: Asegúrate de agregar el método @PostMapping("/api/coincidencias/procesar/{idReporte}") 
-                // a tu interface CoincidenciasClient antes de ejecutar esto.
                 coincidenciasClient.procesarCoincidencias(nuevaMascotaId);
             } catch (Exception e) {
                 System.err.println("ERROR REAL EN COINCIDENCIAS (AL CREAR): " + e.getMessage());
@@ -149,6 +174,13 @@ public class BffMascotaService {
         return response;
     }
 
+    /**
+     * Función: eliminarReporte
+     * Título: Eliminar reporte
+     * Descripción: Delega la solicitud de eliminación de un reporte al microservicio de mascotas.
+     *
+     * @param id Identificador único del reporte a eliminar.
+     */
     public void eliminarReporte(Long id) {
     System.out.println("BFF: Solicitando eliminación del reporte ID: " + id);
     mascotaClient.eliminar(id);

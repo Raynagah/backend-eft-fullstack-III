@@ -18,13 +18,12 @@ public class WebReporteRequestDTO {
     @NotBlank(message = "Debes especificar la especie (Perro, Gato, etc.)")
     private String especie;
 
-    // Lo dejamos opcional como bien pensaste, sin @NotBlank
     private String raza;
 
     @NotBlank(message = "El color principal es obligatorio para la búsqueda")
     private String color;
 
-    private String tamano; // Puede ser opcional
+    private String tamano; 
 
     private String fotografiaUrl;
 
@@ -34,7 +33,6 @@ public class WebReporteRequestDTO {
     @NotNull(message = "La longitud es necesaria para ubicar a la mascota")
     private Double longitud;
 
-    // Datos de contacto que el micro de mascotas espera recibir
     @NotBlank(message = "El nombre de contacto es obligatorio")
     @Size(min = 2, max = 100)
     private String nombreContacto;

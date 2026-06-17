@@ -11,6 +11,6 @@ public class UsuarioAdminDTO {
     private String correo;
     private String telefono;
     private String tipoUsuario; // "admin" o "cliente"
-    private String ocupacion;   // Asumiendo que ms-usuarios guarda esto
-    private Integer cantidadReportes; // ¡El campo estrella!
+    private String ocupacion; 
+    private Integer cantidadReportes;
 }

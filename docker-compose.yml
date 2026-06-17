@@ -54,6 +54,42 @@ services:
       eureka-server:
         condition: service_healthy
 
+  # Redis Caché
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+    depends_on:
+      api-gateway:
+        condition: service_healthy
+
+   # RabbitMQ
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"   # Puerto interno de comunicación AMQP
+      - "15672:15672" # Puerto del panel de administración web
+    environment:
+      - RABBITMQ_DEFAULT_USER=admin
+      - RABBITMQ_DEFAULT_PASS=admin
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
+
   # 3. Microservicio de Usuarios
   ms-usuarios:
     build: ./usuarios
@@ -75,25 +111,10 @@ services:
       timeout: 5s
       retries: 5
     depends_on:
-      api-gateway:
-        condition: service_healthy
-      redis:
+      rabbitmq:
         condition: service_healthy
 
-  # 8. Redis Caché
-  redis:
-    image: redis:7-alpine
-    container_name: redis
-    ports:
-      - "6379:6379"
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 3s
-      retries: 5
-    restart: unless-stopped
-
-  # 4. Microservicio de Mascotas (Con Redis o.O)
+  # 4. Microservicio de Mascotas
   ms-gestion-mascotas:
     build: ./gestion-mascotas
     container_name: ms-gestion-mascotas
@@ -118,10 +139,6 @@ services:
       retries: 5
     depends_on:
       ms-usuarios:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      rabbitmq:
         condition: service_healthy
 
   # 5. Microservicio de Geolocalización
@@ -190,8 +207,6 @@ services:
     depends_on:
       ms-motor-coincidencias:
         condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
 
   # 8. BFF
   ms-bff:
@@ -217,22 +232,6 @@ services:
       ms-notificaciones:
         condition: service_healthy
 
-  # 9. RabbitMQ
-  rabbitmq:
-    image: rabbitmq:3.13-management-alpine
-    container_name: rabbitmq
-    ports:
-      - "5672:5672"   # Puerto interno de comunicación AMQP
-      - "15672:15672" # Puerto del panel de administración web
-    environment:
-      - RABBITMQ_DEFAULT_USER=admin
-      - RABBITMQ_DEFAULT_PASS=admin
-    healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    restart: unless-stopped
 
   # Sección de Pruebas y Reportes (JACOCO - TEST)
 
@@ -256,8 +255,6 @@ services:
       - SPRING_DATA_REDIS_PORT=6379
     depends_on:
       ms-bff:
-        condition: service_healthy
-      redis:
         condition: service_healthy
     deploy:
       resources:
@@ -285,8 +282,6 @@ services:
     depends_on:
       ms-usuarios-test:
         condition: service_completed_successfully
-      redis:
-        condition: service_healthy
     deploy:
       resources:
         limits:

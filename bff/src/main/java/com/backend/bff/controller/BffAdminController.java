@@ -21,6 +21,11 @@ import com.backend.bff.service.BffUsuarioService;
 
 import feign.FeignException;
 
+/**
+ * Función: BffAdminController (Controlador BFF)
+ * Título: Controlador de Administración de Usuarios (BFF)
+ * Descripción: Expone los endpoints de administración para el panel de control web. Permite a los administradores gestionar cuentas de usuario (crear, actualizar, listar y eliminar), delegando la ejecución al microservicio subyacente y gestionando la presentación de errores mediante Feign.
+ */
 @RestController
 @RequestMapping("/api/v1/web/admin/usuarios")
 @CrossOrigin(origins = "*") 
@@ -29,6 +34,14 @@ public class BffAdminController {
     @Autowired
     private BffUsuarioService bffUsuarioService;
 
+    /**
+     * Función: crearUsuarioPorAdmin
+     * Título: Crear usuario por administrador
+     * Descripción: Procesa la creación de un nuevo usuario desde el panel de administración. A diferencia del registro público, este método permite asignar explícitamente el rol del usuario (por ejemplo, crear otros administradores). Retorna el usuario sin exponer la contraseña.
+     *
+     * @param request Objeto UsuarioDTO con la información requerida para el nuevo usuario.
+     * @return ResponseEntity con los datos del usuario creado y código 200 OK, o el error propagado por Feign en caso de fallo.
+     */
     @PostMapping
     public ResponseEntity<?> crearUsuarioPorAdmin(@RequestBody UsuarioDTO request) {
         try {
@@ -41,6 +54,15 @@ public class BffAdminController {
         }
     }
 
+    /**
+     * Función: actualizarUsuarioPorAdmin
+     * Título: Actualizar usuario
+     * Descripción: Sobrescribe los datos de un usuario existente basándose en su ID. Limpia la contraseña del objeto de retorno para evitar filtraciones de seguridad.
+     *
+     * @param id Identificador único de tipo Long del usuario a actualizar.
+     * @param request Objeto UsuarioActualizacionDTO que contiene los nuevos datos a persistir.
+     * @return ResponseEntity con el objeto UsuarioDTO actualizado y un código 200 OK, o el error correspondiente capturado por Feign.
+     */
     @PutMapping("/{id}")
     public ResponseEntity<?> actualizarUsuarioPorAdmin(@PathVariable Long id, @RequestBody UsuarioActualizacionDTO request) {
         try {
@@ -52,13 +74,20 @@ public class BffAdminController {
         }
     }
 
+    /**
+     * Función: listarUsuarios
+     * Título: Listar todos los usuarios
+     * Descripción: Solicita al microservicio de usuarios el listado íntegro de cuentas registradas. Realiza un proceso de limpieza eliminando las contraseñas de cada registro antes de despacharlos al frontend. Maneja robustamente excepciones de comunicación e internas.
+     *
+     * @return ResponseEntity con una lista de objetos UsuarioDTO limpios (200 OK), o respuestas de error estructuradas con los códigos HTTP pertinentes (ej. 500 para fallos graves).
+     */
     @GetMapping
     public ResponseEntity<?> listarUsuarios() {
         try {
             System.out.println("BFF: Solicitando lista de usuarios al ms-usuarios...");
             List<UsuarioDTO> usuarios = bffUsuarioService.listarTodos();
             
-            // Opcional: Limpiamos la contraseña por seguridad
+            // Limpiamos la contraseña por seguridad
             if(usuarios != null) {
                 usuarios.forEach(u -> u.setPassword(null));
             }
@@ -83,6 +112,14 @@ public class BffAdminController {
         }
     }
 
+    /**
+     * Función: eliminarUsuario
+     * Título: Eliminar usuario por ID
+     * Descripción: Delega la instrucción de borrado lógico o físico de una cuenta de usuario al microservicio correspondiente. Retorna un objeto JSON estandarizado para facilitar su consumo por clientes HTTP como Axios.
+     *
+     * @param id Identificador único de tipo Long de la cuenta a eliminar.
+     * @return ResponseEntity conteniendo un JSON con un mensaje de éxito (200 OK), o el cuerpo del error si la operación falla a través de Feign.
+     */
     @DeleteMapping("/{id}")
     public ResponseEntity<?> eliminarUsuario(@PathVariable Long id) {
         try {
@@ -94,9 +131,15 @@ public class BffAdminController {
         }
     }
 
+    /**
+     * Función: listarParaAdmin
+     * Título: Listar usuarios (Formato Admin)
+     * Descripción: Recupera un listado de usuarios pre-formateado y mapeado a DTOs específicos de administración, optimizando los datos para la interfaz visual del panel de control.
+     *
+     * @return ResponseEntity con una lista especializada de objetos UsuarioAdminDTO y un código 200 OK.
+     */
     @GetMapping("/admin/listar")
     public ResponseEntity<List<UsuarioAdminDTO>> listarParaAdmin() {
-        // LLAMA AL MÉTODO NUEVO, NO AL DE USUARIOCLIENT DIRECTAMENTE
         return ResponseEntity.ok(bffUsuarioService.listarUsuariosParaAdmin());
     }
 }

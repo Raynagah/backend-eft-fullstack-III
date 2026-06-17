@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 public class CoincidenciaDTO {
     private Long mascotaId;
     private String nombreMascota;
-    private Double porcentajeSimilitud; // Ejemplo: 0.85 para 85%
-    private String descripcionMatch;    // Ejemplo: "Coincide en raza y color"
+    private Double porcentajeSimilitud; 
+    private String descripcionMatch;    
     private String tipoReporte; //
 }

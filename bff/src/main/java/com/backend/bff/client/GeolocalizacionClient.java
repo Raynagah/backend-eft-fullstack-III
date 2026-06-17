@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 @FeignClient(name = "ms-geolocalizacion", url = "${services.geolocalizacion.url}")
 public interface GeolocalizacionClient {
 
-    // Este es el que usaremos para el agregado o.O
     @GetMapping("/api/geolocalizacion/{id}")
     UbicacionDTO obtenerUbicacionPorId(@PathVariable("id") Long id);
 }

@@ -5,9 +5,23 @@ import org.springframework.stereotype.Component;
 import com.backend.gestionMascotas.dto.ReporteRequestDTO;
 import com.backend.gestionMascotas.model.ReporteMascota;
 
+/**
+ * Función: ReporteFactory (Clase Factory)
+ * Título: Fábrica de Reportes de Mascotas
+ * Descripción: Componente de Spring que implementa el patrón de creación Factory Method para encapsular y centralizar la lógica de instanciación de entidades ReporteMascota, aislando las validaciones de negocio iniciales del servicio principal.
+ */
 @Component
 public class ReporteFactory {
 
+    /**
+     * Función: crearReporte
+     * Título: Instanciar Reporte de Mascota
+     * Descripción: Transfiere los datos desde el objeto de transferencia (ReporteRequestDTO) hacia un Builder de la entidad ReporteMascota. Aplica una regla de negocio estricta para asegurar que el tipo de reporte sea exclusivamente "PERDIDA" o "ENCONTRADA" antes de finalizar la construcción del objeto.
+     *
+     * @param dto Objeto ReporteRequestDTO que contiene los datos de la mascota ingresados a través del controlador.
+     * @return El objeto de dominio ReporteMascota completamente instanciado, validado y listo para ser persistido.
+     * @throws IllegalArgumentException Si el tipo de reporte especificado en el DTO no coincide con los valores permitidos ("PERDIDA" o "ENCONTRADA").
+     */
     public ReporteMascota crearReporte(ReporteRequestDTO dto) {
 
         // Preparamos el builder con los datos comunes del DTO

@@ -8,7 +8,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
-import org.springframework.stereotype.Component; // ➡️ NUEVO IMPORT
+import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.backend.bff.service.AuthService;
@@ -16,7 +16,7 @@ import com.backend.bff.service.AuthService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse; // ➡️ NUEVO IMPORT
+import jakarta.servlet.http.HttpServletResponse; 
 
 @Component
 public class SessionAuthFilter extends OncePerRequestFilter {
@@ -46,7 +46,7 @@ public class SessionAuthFilter extends OncePerRequestFilter {
             // 1. Extraemos los datos REALES del token
             Long userId = jwtService.extractUserId(token);
             String correo = jwtService.extractCorreo(token);
-            String rol = jwtService.extractRol(token); // ➡️ NUEVA LÍNEA: Extraemos el rol del claim del JWT
+            String rol = jwtService.extractRol(token); // Extraemos el rol del claim del JWT
 
             // 2. Validamos la sesión en el microservicio de Usuarios (Neon DB / Redis)
             if (!authService.esSesionValida(userId, sessionId)) {
@@ -59,7 +59,7 @@ public class SessionAuthFilter extends OncePerRequestFilter {
             // Si llegamos aquí, el token es válido y la sesión es correcta.
             if (correo != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 
-                // ➡️ NUEVA LÍNEA: Creamos la autoridad/rol mapeada con el prefijo "ROLE_" que exige Spring Security.
+                // Creamos la autoridad/rol mapeada con el prefijo "ROLE_" que exige Spring Security.
                 // Convierte 'admin' en 'ROLE_ADMIN' y 'cliente' en 'ROLE_CLIENTE'
                 List<SimpleGrantedAuthority> authorities = List.of(
                         new SimpleGrantedAuthority("ROLE_" + rol.toUpperCase())
@@ -69,7 +69,7 @@ public class SessionAuthFilter extends OncePerRequestFilter {
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                         correo,       // El principal (identificador del usuario)
                         null,         // Las credenciales (no se necesitan, ya confiamos en el token)
-                        authorities   // ➡️ MODIFICACIÓN: Pasamos los roles reales en lugar de una lista vacía
+                        authorities   // Pasamos los roles reales en lugar de una lista vacía
                 );
 
                 // Le agregamos los detalles de la petición web (IP, metadatos, etc.)

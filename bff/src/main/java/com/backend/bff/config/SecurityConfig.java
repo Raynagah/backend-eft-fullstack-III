@@ -56,7 +56,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/v1/web/mascotas/**").permitAll()
                         .requestMatchers("/api/v1/web/usuarios/registro").permitAll()
 
-                        // 4. 🔒 RUTAS EXCLUSIVAS DE ADMINISTRADOR
+                        // 4. RUTAS EXCLUSIVAS DE ADMINISTRADOR
                         // Cualquier ruta que empiece con /admin/ requiere obligatoriamente el rol ADMIN
                         .requestMatchers("/api/v1/web/admin/**").hasRole("ADMIN")
 

@@ -26,7 +26,7 @@ public class SecurityConfig {
                 .requestMatchers("/actuator/health").permitAll()
                 .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                 
-                // 🔓 PERMITIMOS TU RUTA DE ADMIN Y LA NORMAL PARA QUE PUEDAS PROBAR EN SWAGGER
+                // Permitimos los endpoints de administración interna y de usuarios sin autenticación 
                 .requestMatchers("/internal/admin/**").permitAll() 
                 .requestMatchers("/api/usuarios/**").permitAll() 
                 

@@ -21,7 +21,7 @@ public interface MascotasClient {
     @GetMapping("/api/mascotas")
     List<MascotaBaseDTO> obtenerTodas();
 
-    @PostMapping("/api/mascotas") // La ruta real en ms-gestion-mascotas
+    @PostMapping("/api/mascotas") 
     Object crear(@RequestBody WebReporteRequestDTO reporte);
 
     @DeleteMapping("/api/mascotas/{id}")

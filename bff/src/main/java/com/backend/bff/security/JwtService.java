@@ -12,8 +12,8 @@ import io.jsonwebtoken.security.Keys;
 @Service
 public class JwtService {
 
-    // ⚠️ IMPORTANTE: Esta clave debe ser EXACTAMENTE la misma
-    // que usas en el microservicio de Usuarios para generar el token.
+    // IMPORTANTE: Esta clave debe ser EXACTAMENTE la misma
+    // que usamos en el microservicio de Usuarios para generar el token.
     @Value("${jwt.secret:tu_clave_secreta_super_segura_y_larga_de_al_menos_32_caracteres}")
     private String secretKey;
 
@@ -28,8 +28,6 @@ public class JwtService {
                 .parseClaimsJws(token) // Si el token es inválido o expiró, esto lanza una excepción automáticamente
                 .getBody();
 
-        // Asumimos que al generar el token en el ms-usuarios, guardaste el ID del usuario en un claim llamado "userId".
-        // Si lo guardaste en el "subject", sería: return Long.parseLong(claims.getSubject());
         return claims.get("userId", Long.class);
     }
 
@@ -39,7 +37,7 @@ public class JwtService {
                 .build()
                 .parseClaimsJws(token)
                 .getBody()
-                .getSubject(); // Generalmente el correo se guarda en el Subject
+                .getSubject();
     }
 
     public String extractRol(String token) {

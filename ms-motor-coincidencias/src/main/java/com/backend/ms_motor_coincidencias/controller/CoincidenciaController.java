@@ -21,10 +21,14 @@ import com.backend.ms_motor_coincidencias.repository.CoincidenciaRepository;
 import com.backend.ms_motor_coincidencias.service.CoincidenciaService;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
+/**
+ * Función: CoincidenciaController (Controlador)
+ * Título: Controlador del Motor de Coincidencias
+ * Descripción: Expone los endpoints REST encargados de orquestar el cruce de datos entre mascotas perdidas y encontradas, calculando porcentajes de similitud y gestionando el envío de alertas mediante la comunicación con otros microservicios (Mascotas y Notificaciones).
+ */
 @RestController
 @RequestMapping("/api/coincidencias")
 @RequiredArgsConstructor
@@ -36,6 +40,14 @@ public class CoincidenciaController {
     private final NotificacionesClient notificacionesClient;
     private final CoincidenciaRepository coincidenciaRepository;
 
+    /**
+     * Función: buscarMatches
+     * Título: Buscar coincidencias para UI
+     * Descripción: Obtiene un reporte específico y lo compara contra todos los reportes del tipo opuesto (perdida vs encontrada) para calcular y devolver una lista de posibles coincidencias con sus respectivos porcentajes de similitud. Operación de solo lectura (no guarda en BD ni notifica).
+     *
+     * @param idReporte Identificador único de tipo Long del reporte de mascota base para la búsqueda.
+     * @return ResponseEntity que contiene una lista de objetos ResultadoMatchDTO con las coincidencias calculadas y un código HTTP 200 (OK).
+     */
     @Operation(summary = "Buscar coincidencias para UI", description = "Solo calcula para mostrar en pantalla, NO notifica.")
     @GetMapping("/buscar/{idReporte}")
     public ResponseEntity<List<ResultadoMatchDTO>> buscarMatches(@PathVariable Long idReporte) {
@@ -56,6 +68,14 @@ public class CoincidenciaController {
         return ResponseEntity.ok(coincidenciaService.evaluarCoincidencias(mascotaOriginal, candidatas));
     }
 
+    /**
+     * Función: procesarYNotificarMatches
+     * Título: Procesar y Notificar Coincidencias
+     * Descripción: Evalúa las posibles coincidencias de un reporte dado. Si se detectan matches con un porcentaje de similitud igual o superior al 85%, guarda el registro de la coincidencia en la base de datos local y despacha las alertas a través del cliente Feign de notificaciones.
+     *
+     * @param idReporte Identificador único de tipo Long del reporte que desencadena el proceso de notificación.
+     * @return ResponseEntity con un mensaje de texto detallando el resultado de la operación y la cantidad de notificaciones emitidas, junto con un código HTTP 200 (OK).
+     */
     @Operation(summary = "Procesar y Notificar", description = "Calcula, guarda y envía correos. Llamar al crear reporte.")
     @PostMapping("/procesar/{idReporte}")
     public ResponseEntity<String> procesarYNotificarMatches(@PathVariable Long idReporte) {

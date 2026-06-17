@@ -16,13 +16,13 @@ public class MascotaDetalleCompletoDTO {
     // --- Datos de ms-mascotas (Alineados con el JSON real) ---
     private Long id;
     private String nombre;
-    private String tipoReporte; // Ej: "PERDIDA" o "ENCONTRADA"
+    private String tipoReporte; 
     private String especie;
     private String raza;
     private String color;
     private String tamano;
     private String fotografiaUrl;
-    private String sagaStatus; // Cambiado de estadoSaga para matchear el JSON
+    private String sagaStatus; 
     private String fechaReporte;
 
     // --- Datos de contacto enriquecidos (ms-usuarios o fallback de ms-mascotas) ---

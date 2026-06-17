@@ -22,6 +22,11 @@ import com.backend.gestionMascotas.repository.MascotaRepository;
 
 import lombok.RequiredArgsConstructor;
 
+/**
+ * Función: MascotaService (Servicio)
+ * Título: Servicio de Gestión de Mascotas
+ * Descripción: Gestiona la lógica de negocio central de los reportes de mascotas. Orquesta la persistencia, las transacciones distribuidas (Saga) comunicándose con el microservicio de geolocalización, emite eventos asíncronos vía RabbitMQ y administra el almacenamiento en caché para optimizar consultas.
+ */
 @Service
 @RequiredArgsConstructor
 public class MascotaService {
@@ -31,7 +36,14 @@ public class MascotaService {
     private final GeolocalizacionClient geoClient;
     private final RabbitTemplate rabbitTemplate;
 
-    // Limpia las listas cacheadas porque hay un registro nuevo. Usamos allEntries = true para borrar todas las listas guardadas y evitar mostrar datos viejos.
+    /**
+     * Función: registrarReporte
+     * Título: Registrar y procesar reporte
+     * Descripción: Crea y guarda un nuevo reporte utilizando el patrón Factory. Inicia una transacción distribuida registrando la ubicación en el microservicio de geolocalización y, si es exitosa, emite un evento en RabbitMQ. Si ocurre un fallo en los servicios externos, ejecuta una compensación automática. Limpia las cachés de listas.
+     *
+     * @param dto Objeto ReporteRequestDTO con la información de la mascota a reportar.
+     * @return El objeto ReporteResponseDTO del reporte recién persistido.
+     */
     @CacheEvict(value = {"mascotas_lista", "mascotas_tipo"}, allEntries = true)
     public ReporteResponseDTO registrarReporte(ReporteRequestDTO dto) {
         ReporteMascota nuevoReporte = reporteFactory.crearReporte(dto);
@@ -67,6 +79,13 @@ public class MascotaService {
         return convertirADTO(nuevoReporte);
     }
 
+    /**
+     * Función: compensarReporte
+     * Título: Compensar estado del reporte
+     * Descripción: Actualiza el estado del reporte a 'FAILED_SYNC' en la base de datos si ocurre un error durante el flujo de la saga (ej. fallo al registrar la geolocalización o emitir el mensaje).
+     *
+     * @param id Identificador único de tipo Long del reporte a compensar.
+     */
     public void compensarReporte(Long id) {
         mascotaRepository.findById(id).ifPresent(m -> {
             m.setSagaStatus("FAILED_SYNC");
@@ -74,7 +93,14 @@ public class MascotaService {
         });
     }
 
-    // Limpia todas las cachés asociadas a mascotas al eliminar una
+    /**
+     * Función: eliminarReporte
+     * Título: Eliminar reporte y geolocalización
+     * Descripción: Elimina el reporte de la base de datos local e intenta borrar la ubicación vinculada en el microservicio de geolocalización. Adicionalmente, invalida todas las cachés relacionadas a mascotas.
+     *
+     * @param id Identificador único de tipo Long del reporte a eliminar.
+     * @throws ReporteNotFoundException Si no se encuentra un reporte asociado al ID proporcionado.
+     */
     @Transactional
     @CacheEvict(value = {"mascotas_lista", "mascotas_tipo", "mascota_detalle"}, allEntries = true)
     public void eliminarReporte(Long id) {
@@ -90,7 +116,13 @@ public class MascotaService {
         mascotaRepository.delete(reporte);
     }
 
-    // Guarda la lista completa en RAM, es ideal porque es la consulta que más harán los usuarios al entrar al feed.
+    /**
+     * Función: obtenerTodosLosReportes
+     * Título: Obtener lista completa de reportes
+     * Descripción: Recupera todos los reportes de la base de datos, los transforma en DTOs y almacena en caché el resultado para optimizar la carga del feed principal.
+     *
+     * @return Lista completa de objetos ReporteResponseDTO.
+     */
     @Cacheable(value = "mascotas_lista")
     public List<ReporteResponseDTO> obtenerTodosLosReportes() {
         return mascotaRepository.findAll()
@@ -99,7 +131,14 @@ public class MascotaService {
                 .collect(Collectors.toList());
     }
 
-    // Guarda listas filtradas por "PERDIDA" o "ENCONTRADA", se usa 'key' para separar la caché según el tipo que pide el usuario.
+    /**
+     * Función: obtenerReportesPorTipo
+     * Título: Obtener reportes por categoría
+     * Descripción: Filtra y devuelve los reportes según su tipo (ej. "PERDIDA" o "ENCONTRADA"), almacenando el resultado en caché utilizando el tipo como clave.
+     *
+     * @param tipoReporte Cadena de texto (String) con el tipo de reporte a filtrar.
+     * @return Lista de objetos ReporteResponseDTO filtrada por el tipo especificado.
+     */
     @Cacheable(value = "mascotas_tipo", key = "#tipoReporte")
     public List<ReporteResponseDTO> obtenerReportesPorTipo(String tipoReporte) {
         return mascotaRepository.findByTipoReporte(tipoReporte)
@@ -108,7 +147,15 @@ public class MascotaService {
                 .collect(Collectors.toList());
     }
 
-    // Guarda el detalle de un solo reporte, ayuda a cargar rápido cuando alguien entra a ver los detalles y foto del animal.
+    /**
+     * Función: obtenerReportePorId
+     * Título: Obtener detalle de reporte
+     * Descripción: Consulta un reporte específico por su ID y guarda el resultado en caché para agilizar las vistas de detalle.
+     *
+     * @param id Identificador único de tipo Long del reporte deseado.
+     * @return Objeto ReporteResponseDTO con los detalles del reporte.
+     * @throws ReporteNotFoundException Si el identificador no existe en el sistema.
+     */
     @Cacheable(value = "mascota_detalle", key = "#id")
     public ReporteResponseDTO obtenerReportePorId(Long id) {
         ReporteMascota entidad = mascotaRepository.findById(id)
@@ -116,7 +163,14 @@ public class MascotaService {
         return convertirADTO(entidad);
     }
 
-    // Metodo utilitario para convertir Entidad a DTO
+    /**
+     * Función: convertirADTO
+     * Título: Convertir entidad a DTO
+     * Descripción: Método utilitario privado para mapear los atributos de la entidad de dominio ReporteMascota hacia el objeto de transferencia de datos ReporteResponseDTO.
+     *
+     * @param entidad Objeto ReporteMascota persistido en la base de datos.
+     * @return Objeto ReporteResponseDTO estructurado para la respuesta al cliente.
+     */
     private ReporteResponseDTO convertirADTO(ReporteMascota entidad) {
         return new ReporteResponseDTO(
                 entidad.getId(),

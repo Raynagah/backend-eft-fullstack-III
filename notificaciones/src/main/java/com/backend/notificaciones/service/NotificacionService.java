@@ -14,6 +14,11 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+/**
+ * Función: NotificacionService (Servicio)
+ * Título: Servicio de Gestión de Notificaciones
+ * Descripción: Servicio principal para gestionar las notificaciones, incluyendo la lógica de negocio para procesar coincidencias detectadas por el motor de IA, interactuar con el microservicio de reportes mediante clientes Feign y manejar las operaciones CRUD de las notificaciones.
+ */
 @Service
 @RequiredArgsConstructor
 public class NotificacionService {
@@ -24,8 +29,13 @@ public class NotificacionService {
     private final NotificacionRepository notificacionRepository;
     private final ReporteClient reporteClient; // Cliente Feign inyectado
 
-    // Metodo para procesar las coincidencias recibidas del motor de IA, creando notificaciones
-    // solo si el porcentaje de similitud es mayor o igual al 85%
+    /**
+     * Función: procesarNotificaciones
+     * Título: Procesar coincidencias de IA
+     * Descripción: Recibe y evalúa un listado de posibles coincidencias. Solo procesa y genera notificaciones para aquellas cuyo porcentaje de similitud es igual o superior al 85%.
+     *
+     * @param coincidencias Lista de objetos NotificacionMatchDTO proporcionados por el motor de IA.
+     */
     public void procesarNotificaciones(List<NotificacionMatchDTO> coincidencias) {
         System.out.println("Recibidas " + coincidencias.size() + " posibles coincidencias");
 
@@ -39,7 +49,13 @@ public class NotificacionService {
         });
     }
 
-    // Metodo privado para guardar la notificación en la base de datos y realizar la llamada Feign para obtener los datos del reporte original
+    /**
+     * Función: guardarYNotificar
+     * Título: Guardar y notificar coincidencia
+     * Descripción: Método interno que consulta el microservicio de reportes a través de Feign para obtener la información del reporte original, mapea los datos y persiste la nueva notificación en la base de datos.
+     *
+     * @param dto Objeto NotificacionMatchDTO con los datos de la coincidencia procesada.
+     */
     private void guardarYNotificar(NotificacionMatchDTO dto) {
         // LLAMADA FEIGN: Obtenemos los datos del reporte original utilizando el ID del reporte que viene en el DTO de coincidencia
         ReporteRequestDTO reporteOriginal = reporteClient.obtenerReportePorId(dto.getReporteId());
@@ -61,12 +77,25 @@ public class NotificacionService {
         System.out.println("NOTIFICACIÓN CREADA para Usuario ID: " + reporteOriginal.getUsuarioId());
     }
 
-    // Metodo para obtener todas las notificaciones de un usuario específico, utilizando su ID como parámetro de búsqueda
+    /**
+     * Función: obtenerPorUsuario
+     * Título: Obtener notificaciones de usuario
+     * Descripción: Consulta la base de datos para recuperar todas las notificaciones asociadas a un ID de usuario específico, ordenándolas por fecha de creación de forma descendente.
+     *
+     * @param usuarioId Identificador único de tipo Long del usuario a consultar.
+     * @return Lista de objetos Notificacion pertenecientes al usuario.
+     */
     public List<Notificacion> obtenerPorUsuario(Long usuarioId) {
         return notificacionRepository.findByUsuarioIdOrderByFechaCreacionDesc(usuarioId);
     }
 
-    // Metodo para eliminar una notificación específica por su ID, eliminándola de la base de datos
+    /**
+     * Función: eliminarNotificacion
+     * Título: Eliminar notificación
+     * Descripción: Verifica la existencia de una notificación mediante su ID y procede a eliminarla permanentemente de la base de datos. Lanza una excepción si el ID no existe.
+     *
+     * @param id Identificador único de tipo Long de la notificación a eliminar.
+     */
     public void eliminarNotificacion(Long id) {
         if (!notificacionRepository.existsById(id)) {
             throw new RuntimeException("La notificación con ID " + id + " no existe.");
@@ -74,12 +103,25 @@ public class NotificacionService {
         notificacionRepository.deleteById(id);
     }
 
-    // Metodo para obtener todas las notificaciones, principalmente para pruebas y administración, sin filtros específicos
+    /**
+     * Función: obtenerTodas
+     * Título: Obtener todas las notificaciones
+     * Descripción: Retorna el registro completo de notificaciones en el sistema sin aplicar ningún filtro, útil para paneles de administración o debugging.
+     *
+     * @return Lista completa de objetos Notificacion almacenados en la base de datos.
+     */
     public List<Notificacion> obtenerTodas() {
         return notificacionRepository.findAll();
     }
 
-    // Metodo para marcar una notificación como leída, cambiando su estado a true en la variable 'leido'
+    /**
+     * Función: marcarComoLeida
+     * Título: Marcar notificación como leída
+     * Descripción: Busca una notificación por su identificador y modifica su estado de lectura a verdadero (true), guardando el cambio de forma transaccional.
+     *
+     * @param id Identificador único de tipo Long de la notificación a actualizar.
+     * @return Objeto Notificacion con su estado de lectura actualizado.
+     */
     @Transactional
     public Notificacion marcarComoLeida(Long id) {
         Notificacion notificacion = notificacionRepository.findById(id)
@@ -89,6 +131,13 @@ public class NotificacionService {
         return notificacionRepository.save(notificacion);
     }
 
+    /**
+     * Función: procesarReporteMascotaRabbitMQ
+     * Título: Procesar evento de mascota (RabbitMQ)
+     * Descripción: Listener asíncrono que se suscribe a una cola de RabbitMQ para interceptar e imprimir eventos relacionados con nuevos reportes de mascotas en el ecosistema de microservicios.
+     *
+     * @param evento Objeto MascotaReportadaEvent que contiene los detalles emitidos por el broker de mensajería.
+     */
     // LISTENER DE RABBITMQ - RECIBE EVENTOS ASÍNCRONOS
     @RabbitListener(queues = RabbitMQConfig.QUEUE_NOTIFICACIONES)
     public void procesarReporteMascotaRabbitMQ(MascotaReportadaEvent evento) {
@@ -99,8 +148,5 @@ public class NotificacionService {
         System.out.println("ID de Usuario: " + evento.getUsuarioId());
         System.out.println("Tipo de Reporte: " + evento.getTipoReporte());
         System.out.println("=========================================================");
-
-        // Aquí puedes reutilizar la lógica para crear una notificación genérica
-        // o guardar un registro si lo consideras necesario para el sistema de alertas.
     }
 }

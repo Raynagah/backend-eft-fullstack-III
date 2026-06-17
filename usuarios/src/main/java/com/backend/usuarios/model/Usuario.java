@@ -33,7 +33,6 @@ public class Usuario {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // --- DATOS PERSONALES ---
     @NotBlank(message = "El nombre es obligatorio")
     @Size(min = 3, max = 50, message = "El nombre debe tener entre 3 y 50 caracteres")
     private String nombre;
@@ -46,7 +45,6 @@ public class Usuario {
     @NotBlank(message = "El género es obligatorio")
     private String genero;
 
-    // --- CONTACTO ---
     @Email(message = "Correo inválido")
     @NotBlank(message = "El correo es obligatorio")
     @Column(unique = true)
@@ -60,7 +58,6 @@ public class Usuario {
     @NotBlank(message = "El teléfono es obligatorio")
     private String telefono;
 
-    // --- EXTRA ---
     private String fotoUrl; // URL imagen perfil
 
     private String ocupacion; // opcional

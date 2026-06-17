@@ -15,8 +15,8 @@ public class Notificacion {
     private Long id;
 
     private Long reporteId;
-    private Long usuarioId;      // Para la búsqueda técnica
-    private String emailUsuario; // Para mostrar en el GET
+    private Long usuarioId;   
+    private String emailUsuario; 
     private Double porcentajeSimilitud;
     private String titulo;
     private String mensaje;

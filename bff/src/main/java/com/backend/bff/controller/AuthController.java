@@ -15,14 +15,27 @@ import com.backend.bff.service.AuthService;
 
 import feign.FeignException;
 
+/**
+ * Función: AuthController (Controlador BFF)
+ * Título: Controlador de Autenticación (Backend For Frontend)
+ * Descripción: Expone los endpoints públicos de seguridad y acceso para las aplicaciones cliente. Actúa como intermediario (BFF) gestionando el inicio de sesión, registro de usuarios y cierre de sesión, delegando la lógica a microservicios subyacentes y manejando las excepciones de comunicación (Feign).
+ */
 @RestController
 @RequestMapping("/api/v1/auth")
-@CrossOrigin(origins = "*") // Ajustar según nuestra configuración de seguridad, ojo acá xd
+@CrossOrigin(origins = "*") // Permite solicitudes desde cualquier origen 
 public class AuthController {
 
     @Autowired
     private AuthService authService;
 
+    /**
+     * Función: login
+     * Título: Iniciar sesión
+     * Descripción: Recibe las credenciales del usuario y las delega al servicio de autenticación. Gestiona las respuestas del microservicio subyacente, capturando excepciones de Feign para retornar el código HTTP exacto (ej. 401) o un error 500 en caso de fallos de red o problemas inesperados.
+     *
+     * @param request Objeto LoginRequest que contiene las credenciales ingresadas por el cliente.
+     * @return ResponseEntity con el token y datos de acceso si la autenticación es exitosa (200 OK), o el mensaje y código de error correspondiente en caso de fallo.
+     */
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
         try {
@@ -41,10 +54,17 @@ public class AuthController {
         }
     }
 
+    /**
+     * Función: registro
+     * Título: Registrar nuevo usuario
+     * Descripción: Procesa la creación de una cuenta de usuario nueva. Por seguridad, fuerza el rol del usuario a "cliente" para evitar la inyección de roles con privilegios superiores desde el frontend, y limpia la contraseña del objeto de respuesta antes de retornarlo.
+     *
+     * @param request Objeto UsuarioDTO con los datos del formulario de registro del nuevo usuario.
+     * @return ResponseEntity con los datos del usuario creado (omitiendo la contraseña) y un código 200 OK, o el error encapsulado proveniente del microservicio de usuarios.
+     */
     @PostMapping("/registro")
     public ResponseEntity<?> registro(@RequestBody UsuarioDTO request) {
         try {
-            // ¡MEDIDA DE SEGURIDAD CRÍTICA!
             // Forzamos el rol "cliente" para que nadie pueda inyectar "admin" desde el formulario público
             request.setTipoUsuario("cliente");
 
@@ -62,6 +82,14 @@ public class AuthController {
         }
     }
 
+    /**
+     * Función: logout
+     * Título: Cerrar sesión
+     * Descripción: Finaliza la sesión activa del usuario tomando el identificador de sesión a través de las cabeceras HTTP y solicitando su invalidación al servicio de autenticación.
+     *
+     * @param sessionId Cadena de texto obtenida del header "X-Session-ID" que identifica unívocamente la sesión a cerrar.
+     * @return ResponseEntity con un mensaje de confirmación y un código HTTP 200 OK.
+     */
     @PostMapping("/logout")
     public ResponseEntity<?> logout(@RequestHeader("X-Session-ID") String sessionId) {
         authService.cerrarSesion(sessionId);

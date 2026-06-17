@@ -13,7 +13,7 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    // 1. Manejo de caídas de otros microservicios (mediante Feign x.x)
+    // 1. Manejo de caídas de otros microservicios (mediante Feign)
     @ExceptionHandler(FeignException.class)
     public ResponseEntity<Map<String, String>> handleFeignException(FeignException e) {
         Map<String, String> error = new HashMap<>();
